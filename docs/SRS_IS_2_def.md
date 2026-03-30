@@ -101,7 +101,7 @@ Se emplea Docker con imágenes base Alpine para lograr contenedores mínimos (~5
 
 ## **Plazo estimado**
 
-Ni idea
+-
 
 ---
 
