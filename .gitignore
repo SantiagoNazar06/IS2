@@ -25,7 +25,7 @@ replay_pid*
 
 # Ignorar directorio de compilación de Maven
 /target/
-
+target/
 # Ignorar bases de datos locales
 *.db
 *.sqlite
