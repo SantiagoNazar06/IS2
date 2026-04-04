@@ -2,10 +2,13 @@ package com.is1.proyecto; // Define el paquete de la aplicación, debe coincidir
 
 import com.is1.proyecto.config.DBConfigSingleton; // Clase Singleton para la configuración de la base de datos.
 import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la base de datos.
+import com.is1.proyecto.repositories.CareerRepository;
+import com.is1.proyecto.routes.CareerRoutes;
 import com.is1.proyecto.routes.StudentRoutes;
 import com.is1.proyecto.routes.TeacherRoutes;
 import com.is1.proyecto.routes.UserRoutes;
 import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.services.CareerService;
 import com.is1.proyecto.services.StudentService;
 import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
@@ -43,17 +46,22 @@ public class App {
         // Filtro 'after' para cerrar conexión a la DB
         DBConnectionFilter.register();
 
+        // --- Instanciacion de repositorios ---
+        CareerRepository careerRepository = new CareerRepository();
+
         // --- Instanciación de servicios ---
         // Los servicios se crean una sola vez y se inyectan en las rutas
         AuthService authService = new AuthService();
         UserService userService = new UserService(authService);
         TeacherService teacherService = new TeacherService();
         StudentService studentService = new StudentService();
+        CareerService careerService = new CareerService(careerRepository);
 
         // --- Registro de rutas ---
         // Cada grupo de rutas se registra con sus servicios correspondientes
         new UserRoutes(authService, userService).register();
         new TeacherRoutes(teacherService).register();
         new StudentRoutes(studentService).register();
+        new CareerRoutes(careerService).register();
     }
 }

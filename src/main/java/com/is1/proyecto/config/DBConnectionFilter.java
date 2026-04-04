@@ -34,8 +34,10 @@ public class DBConnectionFilter {
     private static Filter createBeforeFilter() {
         return (Request req, Response res) -> {
             try {
-                // Abre una conexión a la base de datos utilizando las credenciales configuradas.
-                Base.open(driver, dbUrl, user, pass);
+                // Abre una conexión a la base de datos utilizando las credenciales configuradas si no hay una ya abierta.
+                if (!Base.hasConnection()) { 
+                    Base.open(driver, dbUrl, user, pass);
+                }
                 System.out.println(req.url());
 
             } catch (Exception e) {
