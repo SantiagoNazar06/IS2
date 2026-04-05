@@ -1,0 +1,175 @@
+package com.is1.proyecto.security;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Configuración centralizada de seguridad.
+ * Define rutas públicas, rutas protegidas con roles requeridos, CORS y códigos de error.
+ */
+public class SecurityConfig {
+
+    // ==================== RUTAS PÚBLICAS (WHITELIST) ====================
+    // Estas rutas NO requieren autenticación
+
+    public static final Set<String> PUBLIC_ROUTES = new HashSet<>(Arrays.asList(
+        // Rutas de autenticación
+        "/",
+        "/login",
+        "/logout",
+        
+        // Rutas de registro
+        "/user/create",
+        "/user/new",
+        "/register_student",
+        "/register_teacher",
+        
+        // Rutas estáticas (templates)
+        "/public/",
+        "/css/",
+        "/js/",
+        "/images/",
+        "/favicon.ico"
+    ));
+
+    // ==================== RUTAS PROTEGIDAS POR ROL ====================
+    // clave = prefijo de ruta, valor = roles que pueden acceder
+
+    public static final Map<String, Set<Role>> PROTECTED_ROUTES = new HashMap<>();
+
+    static {
+        // Rutas administrativas - solo ADMIN
+        PROTECTED_ROUTES.put("/admin", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/add_users", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/user/delete", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/user/update", Set.of(Role.ADMIN));
+        
+        // Rutas de dashboard - cualquier usuario autenticado
+        PROTECTED_ROUTES.put("/dashboard", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
+        
+        // Rutas de estudiantes - STUDENT o ADMIN
+        PROTECTED_ROUTES.put("/students", Set.of(Role.ADMIN, Role.STUDENT));
+        PROTECTED_ROUTES.put("/student", Set.of(Role.ADMIN, Role.STUDENT));
+        
+        // Rutas de profesores - TEACHER o ADMIN
+        PROTECTED_ROUTES.put("/teachers", Set.of(Role.ADMIN, Role.TEACHER));
+        PROTECTED_ROUTES.put("/teacher", Set.of(Role.ADMIN, Role.TEACHER));
+        
+        // Rutas de carreras - cualquier usuario autenticado
+        PROTECTED_ROUTES.put("/careers", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
+        PROTECTED_ROUTES.put("/career", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
+    }
+
+    // ==================== CORS CONFIGURATION ====================
+
+    /**
+     * Orígenes permitidos para CORS.
+     */
+    public static final String CORS_ALLOWED_ORIGINS = "http://localhost:3000";
+    
+    /**
+     * Métodos HTTP permitidos para CORS.
+     */
+    public static final String CORS_ALLOWED_METHODS = "GET, POST, PUT, DELETE, OPTIONS";
+
+    /**
+     * Headers permitidos para CORS.
+     */
+    public static final String CORS_ALLOWED_HEADERS = "Content-Type, Authorization";
+
+    /**
+     * Headers expuestos al cliente.
+     */
+    public static final String CORS_EXPOSED_HEADERS = "X-Total-Count, X-User-Role, Location";
+
+    /**
+     * Tiempo máximo de cache para preflight (en segundos).
+     */
+    public static final String CORS_MAX_AGE = "3600";
+
+    // ==================== CÓDIGOS DE ERROR ====================
+
+    public static final int HTTP_UNAUTHORIZED = 401;
+    public static final int HTTP_FORBIDDEN = 403;
+
+    public static final String MSG_UNAUTHORIZED = "{\"error\": \"No autorizado. Inicie sesión para acceder a este recurso.\"}";
+    public static final String MSG_FORBIDDEN = "{\"error\": \"Acceso denegado. No tiene los permisos necesarios para este recurso.\"}";
+
+    // ==================== HELPERS ====================
+
+    /**
+     * Verifica si una ruta es pública (no requiere autenticación).
+     * 
+     * @param path Ruta a verificar
+     * @return true si es pública, false si requiere autenticación
+     */
+    public static boolean isPublicRoute(String path) {
+        if (path == null) {
+            return false;
+        }
+        
+        // Normalizar la ruta (asegurar que empieza con /)
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        
+        // Verificar exact match
+        if (PUBLIC_ROUTES.contains(path)) {
+            return true;
+        }
+        
+        // Verificar prefijos públicos (ej: /public/, /css/)
+        // Excluir "/" del matching de prefijos porque coincidiría con todas las rutas
+        for (String publicRoute : PUBLIC_ROUTES) {
+            if (publicRoute.endsWith("/") && !publicRoute.equals("/") && path.startsWith(publicRoute)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Obtiene los roles requeridos para una ruta.
+     * 
+     * @param path Ruta a verificar
+     * @return Set de roles permitidos, o null si la ruta no está protegida por rol específico
+     */
+    public static Set<Role> getRequiredRoles(String path) {
+        if (path == null) {
+            return null;
+        }
+        
+        // Normalizar la ruta
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        
+        // Buscar coincidencia exacta
+        for (Map.Entry<String, Set<Role>> entry : PROTECTED_ROUTES.entrySet()) {
+            String protectedPath = entry.getKey();
+            
+            // Coincidencia exacta o prefijo
+            if (path.equals(protectedPath) || path.startsWith(protectedPath + "/")) {
+                return entry.getValue();
+            }
+        }
+        
+        // Ruta protegida pero sin restricción de rol específica (cualquier autenticado)
+        // Retornar null significa que cualquier usuario autenticado puede acceder
+        return null;
+    }
+
+    /**
+     * Verifica si una ruta requiere autenticación.
+     * 
+     * @param path Ruta a verificar
+     * @return true si requiere autenticación
+     */
+    public static boolean requiresAuthentication(String path) {
+        return !isPublicRoute(path);
+    }
+}

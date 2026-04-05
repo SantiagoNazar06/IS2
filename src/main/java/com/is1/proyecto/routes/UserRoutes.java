@@ -31,6 +31,10 @@ public class UserRoutes {
      * Registra todas las rutas de usuario en Spark.
      */
     public void register() {
+        // GET: Muestra el formulario de inicio de sesión (login).
+        get("/", this::showLogin, templateEngine);
+        get("/login", this::showLogin, templateEngine);
+
         // GET: Muestra el formulario de creación de cuenta.
         // Soporta la visualización de mensajes de éxito o error pasados como query parameters.
         get("/user/create", this::showCreateForm, templateEngine);
@@ -41,9 +45,6 @@ public class UserRoutes {
 
         // GET: Ruta para cerrar la sesión del usuario.
         get("/logout", this::logout);
-
-        // GET: Muestra el formulario de inicio de sesión (login).
-        get("/", this::showLogin, templateEngine);
 
         // GET: Ruta de alias para el formulario de creación de cuenta.
         get("/user/new", (req, res) -> new ModelAndView(new HashMap<>(), "user_form.mustache"), templateEngine);
@@ -155,8 +156,10 @@ public class UserRoutes {
         if (loginResult.success) {
             // Autenticación exitosa.
             res.status(200); // OK.
-            authService.createSession(req, username, loginResult.user.getId());
+            // Incluye el rol del usuario en la sesión
+            authService.createSession(req, username, loginResult.user.getId(), loginResult.user.getRole());
             model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
+            model.put("role", loginResult.user.getRole()); // Añade el rol al modelo
             // Renderiza la plantilla del dashboard tras un login exitoso.
             return new ModelAndView(model, "dashboard.mustache");
         } else {

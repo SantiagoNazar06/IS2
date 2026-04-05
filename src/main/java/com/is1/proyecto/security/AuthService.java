@@ -33,7 +33,6 @@ public class AuthService {
             return new LoginResult(false, message, null);
         }
     }
-
     /**
      * Autentica un usuario con nombre de usuario y contraseña.
      * 
@@ -76,16 +75,29 @@ public class AuthService {
      * @param res       Respuesta HTTP
      * @param username  Nombre de usuario
      * @param userId    ID del usuario
+     * @param role      Rol del usuario (ADMIN, STUDENT, TEACHER)
      */
-    public void createSession(Request req, String username, Object userId) {
+    public void createSession(Request req, String username, Object userId, String role) {
         // --- Gestión de Sesión ---
         Session session = req.session(true);
         session.attribute("currentUserUsername", username); // Guarda el nombre de usuario en la sesión.
         session.attribute("userId", userId); // Guarda el ID de la cuenta en la sesión (útil).
+        session.attribute("userRole", role); // Guarda el rol del usuario.
         session.attribute("loggedIn", true); // Establece una bandera para indicar que el usuario está logueado.
 
-        System.out.println("DEBUG: Login exitoso para la cuenta: " + username);
+        System.out.println("DEBUG: Login exitoso para la cuenta: " + username + " con rol: " + role);
         System.out.println("DEBUG: ID de Sesión: " + session.id());
+    }
+
+    /**
+     * Crea una sesión para el usuario autenticado (sin rol, para backward compatibility).
+     * 
+     * @param req       Solicitud HTTP
+     * @param username  Nombre de usuario
+     * @param userId    ID del usuario
+     */
+    public void createSession(Request req, String username, Object userId) {
+        createSession(req, username, userId, "STUDENT"); // Default role
     }
 
     /**
@@ -125,6 +137,27 @@ public class AuthService {
      */
     public String getCurrentUsername(Request req) {
         return req.session().attribute("currentUserUsername");
+    }
+
+    /**
+     * Obtiene el rol del usuario actual de la sesión.
+     * 
+     * @param req Solicitud HTTP
+     * @return Role del usuario o null si no está autenticado
+     */
+    public Role getCurrentUserRole(Request req) {
+        String roleStr = req.session().attribute("userRole");
+        return Role.fromString(roleStr);
+    }
+
+    /**
+     * Obtiene el ID del usuario actual de la sesión.
+     * 
+     * @param req Solicitud HTTP
+     * @return ID del usuario o null si no está autenticado
+     */
+    public Object getCurrentUserId(Request req) {
+        return req.session().attribute("userId");
     }
 
     /**
