@@ -8,6 +8,7 @@ import com.is1.proyecto.routes.StudentRoutes;
 import com.is1.proyecto.routes.TeacherRoutes;
 import com.is1.proyecto.routes.UserRoutes;
 import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.security.SecurityFilter;
 import com.is1.proyecto.services.CareerService;
 import com.is1.proyecto.services.StudentService;
 import com.is1.proyecto.services.TeacherService;
@@ -56,6 +57,12 @@ public class App {
         TeacherService teacherService = new TeacherService();
         StudentService studentService = new StudentService();
         CareerService careerService = new CareerService(careerRepository);
+
+        // --- Filtro de seguridad ---
+        // Debe registrarse ANTES de las rutas para interceptar todas las requests
+        // El SecurityFilter valida autenticación, roles y aplica CORS
+        SecurityFilter.setAuthService(authService);
+        SecurityFilter.register();
 
         // --- Registro de rutas ---
         // Cada grupo de rutas se registra con sus servicios correspondientes
