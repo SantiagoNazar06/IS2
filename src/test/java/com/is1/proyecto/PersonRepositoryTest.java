@@ -18,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,6 +111,7 @@ public class PersonRepositoryTest {
         try (MockedStatic<Person> personMockedStatic = Mockito.mockStatic(Person.class)) {
 
             LazyList<Person> list = Mockito.mock(LazyList.class);
+            doReturn(list).when(list).load();
 
             personMockedStatic.when(Person::findAll)
                     .thenReturn(list);
@@ -116,6 +119,7 @@ public class PersonRepositoryTest {
             List<Person> result = repository.findAll();
 
             assertEquals(list, result);
+            verify(list).load(); 
         }
     }
 
@@ -139,7 +143,7 @@ public class PersonRepositoryTest {
             boolean result = repository.update(1L, data);
 
             assertTrue(result);
-            verify(personMock).set(data);
+            verify(personMock).set("firstname", "Juan");
             verify(personMock).saveIt();
         }
     }
