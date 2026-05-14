@@ -4,6 +4,7 @@ import com.is1.proyecto.config.DBConfigSingleton;
 import com.is1.proyecto.models.Person;
 import java.util.List;
 import java.util.Map;
+import org.javalite.activejdbc.Base; 
 
 /**
  * Repositorio encargado de gestionar las operaciones CRUD de Person.
@@ -88,7 +89,8 @@ public class PersonRepository {
     public List<Person> findAll(){
         db.openConnection();
         try{
-            return Person.findAll(); 
+            List<Person> result = Person.findAll().load();
+            return result; 
         }finally{
             db.closeConnection();
         }
@@ -121,9 +123,12 @@ public class PersonRepository {
             if(currPerson == null){
              return false;
             }
-            currPerson.set(data);
-            return currPerson.saveIt();            
 
+            for (Map.Entry<String, Object> entry : data.entrySet()) {
+                currPerson.set(entry.getKey(), entry.getValue());
+            }
+        
+            return currPerson.saveIt();            
         }finally{
             db.closeConnection();
         }
@@ -168,6 +173,19 @@ public class PersonRepository {
         try{
             return Person.findFirst("dni = ?", dni);
         }finally{
+            db.closeConnection();
+        }
+    }
+
+    /**
+     * Elimina la tabla persons.
+     * Por el momento util solo para realizar testing
+     */
+    public void deleteAll() {
+        db.openConnection();
+        try {
+            Base.exec("DELETE FROM persons");
+        } finally {
             db.closeConnection();
         }
     }
