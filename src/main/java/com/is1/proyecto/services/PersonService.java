@@ -86,7 +86,14 @@ public class PersonService {
     }
 
     public boolean delete(Long id){
-        return false;
+        if(id == null || id < 0){
+            throw new PersonNotFoundException("El id no es valido");
+        }
+        // Si la persona no existe
+        if(repository.findById(id) == null){
+            return false;
+        }
+        return repository.delete(id);
     }
 
     public static class ValidationException extends RuntimeException {

@@ -145,12 +145,9 @@ public class PersonRepository {
         db.openConnection();
         try{
             Person currPerson = Person.findById(id);
-
-            // Si la persona no existe
             if(currPerson == null){
                 return false;
             }
-
             // Elimina la entidad (true indica eliminación en cascada)
             currPerson.delete(true);
             return true;

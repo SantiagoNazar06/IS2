@@ -1,6 +1,12 @@
 com/is1/proyecto/security/AuthServiceRoleTest.class
-com/is1/proyecto/PersonRepositoryIntegrationTest.class
+com/is1/proyecto/PersonServiceTest$UpdateValidations.class
 com/is1/proyecto/security/SecurityConfigTest.class
+com/is1/proyecto/PersonServiceTest$DeleteValidations.class
+com/is1/proyecto/PersonServiceTest.class
+com/is1/proyecto/PersonRepositoryIntegrationTest.class
+com/is1/proyecto/PersonServiceTest$EmailBoundaryTests.class
+com/is1/proyecto/PersonServiceTest$CreateValidations.class
 com/is1/proyecto/PersonRepositoryTest.class
 com/is1/proyecto/AppTest.class
+com/is1/proyecto/PersonServiceTest$DniBoundaryTests.class
 com/is1/proyecto/security/RoleTest.class

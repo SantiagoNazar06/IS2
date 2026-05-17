@@ -3,6 +3,7 @@
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/repositories/CareerRepository.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/models/Person.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/security/SecurityConfig.java
+/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/services/PersonService.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/services/TeacherService.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/services/CareerService.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/main/java/com/is1/proyecto/services/UserService.java

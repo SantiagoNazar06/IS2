@@ -18,10 +18,12 @@ com/is1/proyecto/services/UserService$RegisterResult.class
 com/is1/proyecto/models/Teacher.class
 com/is1/proyecto/repositories/UserRepository.class
 com/is1/proyecto/services/StudentService.class
+com/is1/proyecto/services/PersonService$PersonNotFoundException.class
 com/is1/proyecto/security/SecurityConfig.class
 com/is1/proyecto/routes/CareerRoutes.class
 com/is1/proyecto/security/SecurityFilter.class
 com/is1/proyecto/security/AuthService.class
+com/is1/proyecto/services/PersonService$ValidationException.class
 com/is1/proyecto/services/TeacherService$TeacherRegisterResult.class
 com/is1/proyecto/services/TeacherService$TeacherData.class
 com/is1/proyecto/routes/StudentRoutes.class
@@ -29,5 +31,7 @@ com/is1/proyecto/security/AuthService$LoginResult.class
 com/is1/proyecto/services/CareerService.class
 com/is1/proyecto/models/Evaluation.class
 com/is1/proyecto/services/CareerService$CareerRegisterResult.class
+com/is1/proyecto/services/PersonService$PersonDTO.class
 com/is1/proyecto/services/StudentService$StudentRegisterResult.class
+com/is1/proyecto/services/PersonService.class
 com/is1/proyecto/models/Condition.class
