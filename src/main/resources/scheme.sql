@@ -63,6 +63,10 @@ CREATE TABLE evaluations (
 );
 
 CREATE TABLE conditions (
-    id_condition INTEGER PRIMARY KEY AUTOINCREMENT,
-    condition_type TEXT CHECK(condition_type IN('aprobado', 'desaprobado'))
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    prerequisite_subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    type VARCHAR(20) NOT NULL DEFAULT 'REGULAR',
+    CHECK(type IN ('REGULAR', 'APROBADA')),
+    CHECK(subject_id != prerequisite_subject_id)
 )
