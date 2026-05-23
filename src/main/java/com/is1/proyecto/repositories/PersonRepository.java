@@ -2,6 +2,8 @@ package com.is1.proyecto.repositories;
 
 import com.is1.proyecto.config.DBConfigSingleton;
 import com.is1.proyecto.models.Person;
+import com.is1.proyecto.ports.out.PersonRepositoryInterface;
+
 import java.util.List;
 import java.util.Map;
 import org.javalite.activejdbc.Base; 
@@ -15,7 +17,7 @@ import org.javalite.activejdbc.Base;
  * 
  * Utiliza ActiveJDBC para la persistencia de datos.
  */
-public class PersonRepository {
+public class PersonRepository implements PersonRepositoryInterface{
 
     private DBConfigSingleton db;
 
@@ -53,6 +55,7 @@ public class PersonRepository {
      * @param person instancia de Person con los datos a persistir
      * @return la persona creada
      */
+    @Override
     public Person create(Person person){
         
         db.openConnection();
@@ -71,6 +74,7 @@ public class PersonRepository {
      * @param id identificador de la persona
      * @return la persona encontrada o null si no existe
      */
+    @Override
     public Person findById(Long id){
         db.openConnection();
         try{
@@ -86,6 +90,7 @@ public class PersonRepository {
      *
      * @return lista de todas las personas
      */
+    @Override
     public List<Person> findAll(){
         db.openConnection();
         try{
@@ -105,6 +110,7 @@ public class PersonRepository {
      * @param updatedPerson persona con los datos actualizados
      * @return true si la actualización fue exitosa, false si la persona no existe
      */
+    @Override
     public boolean update(Long id, Map<String, Object> data){
         db.openConnection();
         try{
@@ -141,6 +147,7 @@ public class PersonRepository {
      * @param person persona a eliminar
      * @return true si la eliminación fue exitosa, false si la persona no existe
      */
+    @Override
     public boolean delete(Long id){
         db.openConnection();
         try{
@@ -165,6 +172,7 @@ public class PersonRepository {
      * @param dni documento de identidad de la persona.
      * @return la persona encontrada o null si no existe.
      */
+    @Override
     public Person findByDni(String dni){
         db.openConnection();
         try{

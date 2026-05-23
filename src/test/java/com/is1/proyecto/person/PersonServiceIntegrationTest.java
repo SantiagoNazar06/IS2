@@ -3,9 +3,10 @@ package com.is1.proyecto.person;
 import com.is1.proyecto.services.PersonService;
 import com.is1.proyecto.models.Person;
 import com.is1.proyecto.repositories.PersonRepository;
-import com.is1.proyecto.services.PersonService.PersonDTO;
-import com.is1.proyecto.services.PersonService.PersonNotFoundException;
-import com.is1.proyecto.services.PersonService.ValidationException;
+import com.is1.proyecto.dto.PersonDTO;
+import com.is1.proyecto.factories.PersonFactoryInterface;
+import com.is1.proyecto.exceptions.PersonNotFoundException;
+import com.is1.proyecto.exceptions.ValidationException;
 
 import org.javalite.activejdbc.Base;
 import org.junit.jupiter.api.*;
@@ -47,7 +48,9 @@ class PersonServiceIT {
             "email TEXT" +
             ")");
 
-        service = new PersonService(new PersonRepository());
+        PersonRepository repository = new PersonRepository();
+        PersonFactoryInterface factory = Person::new;  // lambda como implementación de PersonFactory
+        service = new PersonService(repository, factory);
     }
 
     @AfterEach
@@ -84,11 +87,11 @@ class PersonServiceIT {
             Person created = service.create(dto);
 
             assertNotNull(created.getId());
-            assertEquals(dto.dni,       created.getDni());
-            assertEquals(dto.firstName, created.getFirstName());
-            assertEquals(dto.lastName,  created.getLastName());
-            assertEquals(dto.email,     created.getEmail());
-            assertEquals(dto.phone,     created.getPhone());
+            assertEquals(dto.getDni(),       created.getDni());
+            assertEquals(dto.getFirstName(), created.getFirstName());
+            assertEquals(dto.getLastName(),  created.getLastName());
+            assertEquals(dto.getEmail(),     created.getEmail());
+            assertEquals(dto.getPhone(),     created.getPhone());
         }
 
         @Test

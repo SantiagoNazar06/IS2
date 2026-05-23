@@ -1,7 +1,8 @@
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/security/SecurityConfigTest.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/AppTest.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/security/AuthServiceRoleTest.java
-/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/PersonRepositoryTest.java
-/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/PersonServiceTest.java
+/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/person/PersonRepositoryIntegrationTest.java
 /home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/security/RoleTest.java
-/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/PersonRepositoryIntegrationTest.java
+/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/person/PersonServiceTest.java
+/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/person/PersonRepositoryTest.java
+/home/mikhailmorales/Escritorio/UNIVERSIDAD/TERCERO/ingenieria/IS2/src/test/java/com/is1/proyecto/person/PersonServiceIntegrationTest.java
