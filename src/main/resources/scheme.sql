@@ -56,10 +56,25 @@ CREATE TABLE careers (
     career_duration INTEGER NOT NULL CHECK(career_duration > 0)
 );
 
+DROP TABLE IF EXISTS enrollments;
+CREATE TABLE enrollments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    subject_id INTEGER NOT NULL,
+    enrollment_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject),
+    UNIQUE(student_id, subject_id) 
+);
+
+
 CREATE TABLE evaluations (
-    id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT,
-    evaluation_date DATE NOT NULL,
-    evaluation_name TEXT NOT NULL
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    enrollment_id INTEGER NOT NULL UNIQUE,
+    grade DECIMAL(4,2) NOT NULL,
+    evaluation_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id),
+    CHECK(grade >= 0 AND grade <= 10)
 );
 
 CREATE TABLE conditions (
