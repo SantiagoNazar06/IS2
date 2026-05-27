@@ -5,7 +5,8 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT, -- Clave primaria autoincremental para SQLite
     name TEXT NOT NULL UNIQUE,          -- Nombre de usuario (TEXT es el tipo de cadena recomendado para SQLite), con restricción UNIQUE
-    password TEXT NOT NULL           -- Contraseña hasheada (TEXT es el tipo de cadena recomendado para SQLite)
+    password TEXT NOT NULL,           -- Contraseña hasheada (TEXT es el tipo de cadena recomendado para SQLite)
+    role TEXT NOT NULL                -- Role del usuario, por defecto es STUDENT
 );
 
 -- Elimina la tabla 'persons' si ya existe para asegurar un inicio limpio
@@ -63,6 +64,10 @@ CREATE TABLE evaluations (
 );
 
 CREATE TABLE conditions (
-    id_condition INTEGER PRIMARY KEY AUTOINCREMENT,
-    condition_type TEXT CHECK(condition_type IN('aprobado', 'desaprobado'))
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    prerequisite_subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    type VARCHAR(20) NOT NULL DEFAULT 'REGULAR',
+    CHECK(type IN ('REGULAR', 'APROBADA')),
+    CHECK(subject_id != prerequisite_subject_id)
 )
