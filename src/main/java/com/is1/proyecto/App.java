@@ -16,6 +16,7 @@ import com.is1.proyecto.services.ConditionService;
 import com.is1.proyecto.services.StudentService;
 import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static spark.Spark.port;
 
@@ -33,8 +34,8 @@ public class App {
      * Aquí se configuran el servidor, filtros y se registran todas las rutas.
      */
     public static void main(String[] args) {
-        // --- Configuración del servidor ---
-        port(8080); // Configura el puerto en el que la aplicación Spark escuchará las peticiones (por defecto es 4567).
+        int serverPort = Integer.parseInt(System.getProperty("server.port", "8080"));
+        port(serverPort);
 
         // --- Configuración de la base de datos ---
         DBConfigSingleton dbConfig = DBConfigSingleton.getInstance();
@@ -73,7 +74,8 @@ public class App {
         // Cada grupo de rutas se registra con sus servicios correspondientes
         new UserRoutes(authService, userService).register();
         new TeacherRoutes(teacherService).register();
-        new StudentRoutes(studentService).register();
+        ObjectMapper objectMapper = new ObjectMapper();
+        new StudentRoutes(studentService, objectMapper).register();
         new CareerRoutes(careerService).register();
         new SubjectRoutes(conditionService).register();
     }
