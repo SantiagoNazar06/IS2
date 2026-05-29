@@ -1,12 +1,12 @@
 package com.is1.proyecto.models;
 
-import java.sql.*;
+import java.sql.Date;
 
 import org.javalite.activejdbc.Model;
 import org.javalite.activejdbc.annotations.Table;
 
 @Table("evaluations")
-public class Evaluation extends Model{
+public class Evaluation extends Model {
 
     public Integer getEvaluationId(){
         return getInteger("id");

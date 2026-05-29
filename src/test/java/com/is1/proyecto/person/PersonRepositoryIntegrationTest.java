@@ -1,4 +1,4 @@
-package com.is1.proyecto;
+package com.is1.proyecto.person;
 
 import com.is1.proyecto.models.Person;
 import com.is1.proyecto.repositories.PersonRepository;

@@ -24,7 +24,9 @@ hs_err_pid*
 replay_pid*
 
 # Ignorar directorio de compilación de Maven
-/target/
+target/
+.atl/
+.idea/
 # Ignorar bases de datos locales
 *.db
 *.sqlite

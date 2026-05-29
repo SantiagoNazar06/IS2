@@ -1,4 +1,4 @@
-package com.is1.proyecto;
+package com.is1.proyecto.person;
 
 import com.is1.proyecto.config.DBConfigSingleton;
 import com.is1.proyecto.repositories.PersonRepository;
