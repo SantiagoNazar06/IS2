@@ -1,6 +1,8 @@
 package com.is1.proyecto.routes;
 
-import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.services.AuthService;
+import com.is1.proyecto.services.AuthenticationException;
+import com.is1.proyecto.services.UserClaims;
 import com.is1.proyecto.services.UserService;
 import spark.ModelAndView;
 import spark.Request;
@@ -85,31 +87,38 @@ public class UserRoutes {
      * GET /dashboard - Muestra el dashboard del usuario autenticado.
      */
     private ModelAndView showDashboard(Request req, Response res) {
-        Map<String, Object> model = new HashMap<>(); // Modelo para la plantilla del dashboard.
+        Map<String, Object> model = new HashMap<>();
 
-        // 1. Verificar si el usuario ha iniciado sesión.
-        if (!authService.isAuthenticated(req)) {
+        // 1. Obtener token desde la cookie
+        String token = req.cookie("token");
+
+        // 2. Validar token
+        if (token == null || authService.validateToken(token) == null) {
             System.out.println("DEBUG: Acceso no autorizado a /dashboard. Redirigiendo a /login.");
-            // Redirige al login con un mensaje de error.
             res.redirect("/login?error=Debes iniciar sesión para acceder a esta página.");
-            return null; // Importante retornar null después de una redirección.
+            return null;
         }
 
-        // 2. Si el usuario está logueado, añade el nombre de usuario al modelo para la plantilla.
-        model.put("username", authService.getCurrentUsername(req));
+        // 3. Obtener claims del usuario
+        UserClaims claims = authService.validateToken(token);
+        model.put("username", claims.getUsername());
 
-        // 3. Renderiza la plantilla del dashboard con el nombre de usuario.
         return new ModelAndView(model, "dashboard.mustache");
     }
 
     /**
-     * GET /logout - Cierra la sesión del usuario.
+     * GET /logout - Cierra la sesión del usuario invalidando el token JWT.
      */
     private Object logout(Request req, Response res) {
-        authService.invalidateSession(req);
+        String token = req.cookie("token");
+        if (token != null) {
+            authService.logout(token);
+        }
+        // Eliminar la cookie del token
+        res.removeCookie("/", "token");
         // Redirige al usuario a la página de login con un mensaje de éxito.
         res.redirect("/");
-        return null; // Importante retornar null después de una redirección.
+        return null;
     }
 
     /**
@@ -146,28 +155,28 @@ public class UserRoutes {
      * POST /login - Procesa el formulario de inicio de sesión.
      */
     private ModelAndView handleLogin(Request req, Response res) {
-        Map<String, Object> model = new HashMap<>(); // Modelo para la plantilla de login o dashboard.
+        Map<String, Object> model = new HashMap<>();
 
         String username = req.queryParams("username");
-        String plainTextPassword = req.queryParams("password");
+        String password = req.queryParams("password");
 
-        AuthService.LoginResult loginResult = authService.authenticate(username, plainTextPassword);
+        try {
+            // Autenticar y obtener token JWT
+            String token = authService.login(username, password);
 
-        if (loginResult.success) {
-            // Autenticación exitosa.
-            res.status(200); // OK.
-            // Incluye el rol del usuario en la sesión
-            authService.createSession(req, username, loginResult.user.getId(), loginResult.user.getRole());
-            model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
-            model.put("role", loginResult.user.getRole()); // Añade el rol al modelo
-            // Renderiza la plantilla del dashboard tras un login exitoso.
-            return new ModelAndView(model, "dashboard.mustache");
-        } else {
-            // Fallo de autenticación.
-            res.status(401); // Unauthorized.
+            // Configurar cookie httpOnly con el token (expira en 24h)
+            res.cookie("/", "token", token, 86400, false, true);
+
+            // Redirigir al dashboard
+            res.redirect("/dashboard");
+            return null;
+
+        } catch (AuthenticationException e) {
+            // Fallo de autenticación
+            res.status(401);
             System.out.println("DEBUG: Intento de login fallido para: " + username);
-            model.put("errorMessage", loginResult.message); // Mensaje genérico por seguridad.
-            return new ModelAndView(model, "login.mustache"); // Renderiza la plantilla de login con error.
+            model.put("errorMessage", e.getMessage());
+            return new ModelAndView(model, "login.mustache");
         }
     }
 

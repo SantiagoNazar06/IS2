@@ -171,5 +171,5 @@ public class SecurityConfig {
      */
     public static boolean requiresAuthentication(String path) {
         return !isPublicRoute(path);
-    }
+    } 
 }

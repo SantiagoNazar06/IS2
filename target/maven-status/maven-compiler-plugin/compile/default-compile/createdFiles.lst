@@ -1,10 +1,9 @@
 com/is1/proyecto/models/Career.class
-com/is1/proyecto/App.class
 com/is1/proyecto/models/User.class
 com/is1/proyecto/models/Student.class
-com/is1/proyecto/models/Evaluation.class
 com/is1/proyecto/config/DBConfigSingleton.class
 com/is1/proyecto/models/Person.class
 com/is1/proyecto/models/Subject.class
 com/is1/proyecto/models/Teacher.class
+com/is1/proyecto/models/Evaluation.class
 com/is1/proyecto/models/Condition.class

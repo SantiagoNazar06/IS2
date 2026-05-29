@@ -1,22 +1,26 @@
 package com.is1.proyecto.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import spark.Filter;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
-
 import java.io.IOException;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.is1.proyecto.services.AuthService;
+import com.is1.proyecto.services.UserClaims;
+
+import spark.Filter;
+import spark.Request;
+import spark.Response;
+import spark.Spark;
+
 /**
  * Filtro de seguridad que se ejecuta antes de cada request.
  * 
  * Responsabilidades:
- * 1. Validar autenticación en rutas protegidas
+ * 1. Validar autenticación en rutas protegidas mediante token JWT (cookie o header)
  * 2. Verificar roles de usuario
  * 3. Aplicar headers CORS
  * 4. Manejar preflight OPTIONS
@@ -25,14 +29,35 @@ public class SecurityFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecurityFilter.class);
 
+    private static final String BEARER_PREFIX = "Bearer ";
+
     // Referencia al AuthService (se inyecta al registrar)
     private static AuthService authService;
 
     /**
-     * Inyecta el AuthService para poder verificar sesiones.
+     * Inyecta el AuthService para poder validar tokens.
      */
     public static void setAuthService(AuthService service) {
         authService = service;
+    }
+
+    /**
+     * Extrae el token JWT de la cookie 'token' o del header Authorization.
+     */
+    private static String extractToken(Request req) {
+        // 1. Intentar desde cookie
+        String token = req.cookie("token");
+        if (token != null && !token.isEmpty()) {
+            return token;
+        }
+
+        // 2. Fallback a header Authorization: Bearer <token>
+        String authHeader = req.headers("Authorization");
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            return authHeader.substring(BEARER_PREFIX.length()).trim();
+        }
+
+        return null;
     }
 
     /**
@@ -43,44 +68,46 @@ public class SecurityFilter {
             String path = req.pathInfo();
             String method = req.requestMethod();
             
-            // 1. Aplicar headers CORS a TODAS las respuestas
+            //Aplicar headers CORS a TODAS las respuestas
             applyCorsHeaders(res);
             
-            // 2. Manejar preflight OPTIONS
+            //Manejar preflight OPTIONS
             if ("OPTIONS".equalsIgnoreCase(method)) {
                 return;
             }
             
-            // 3. Verificar si la ruta es pública
+            //Verificar si la ruta es pública
             if (SecurityConfig.isPublicRoute(path)) {
                 return;
             }
-            
-            // 4. Verificar si hay sesión activa
-            boolean isAuth = authService != null && authService.isAuthenticated(req);
-            
-            if (!isAuth) {
+
+            //Extraer y validar token JWT
+            String token = extractToken(req);
+            UserClaims claims = (authService != null && token != null)
+                    ? authService.validateToken(token)
+                    : null;
+
+            if (claims == null) {
                 try {
-                    // Escribimos la respuesta directamente usando el response raw
                     HttpServletResponse raw = res.raw();
                     raw.setStatus(SecurityConfig.HTTP_UNAUTHORIZED);
                     raw.setContentType("application/json");
                     raw.getWriter().write(SecurityConfig.MSG_UNAUTHORIZED);
                     raw.getWriter().flush();
-                    // Importante: Spark necesita saber que la respuesta ya fue enviada
                     Spark.halt(401);
                 } catch (IOException e) {
                     LOG.error("Error writing unauthorized response", e);
                 }
                 return;
             }
+
+            //Guardar claims en el request para que los handlers puedan usarlos
+            req.attribute("userClaims", claims);
             
-            // 5. Verificar rol si la ruta lo requiere
+            //Verificar rol si la ruta lo requiere
             Set<Role> requiredRoles = SecurityConfig.getRequiredRoles(path);
             if (requiredRoles != null && !requiredRoles.isEmpty()) {
-                Role userRole = authService.getCurrentUserRole(req);
-                
-                if (userRole == null || !requiredRoles.contains(userRole)) {
+                if (claims.getRole() == null || !requiredRoles.contains(claims.getRole())) {
                     try {
                         HttpServletResponse raw = res.raw();
                         raw.setStatus(SecurityConfig.HTTP_FORBIDDEN);

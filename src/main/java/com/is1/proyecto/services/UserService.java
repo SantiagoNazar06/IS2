@@ -2,7 +2,7 @@ package com.is1.proyecto.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.is1.proyecto.models.User;
-import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.services.AuthService;
 import spark.Response;
 
 import java.util.Map;
