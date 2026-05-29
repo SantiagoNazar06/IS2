@@ -8,43 +8,32 @@ import org.javalite.activejdbc.annotations.Table;
 @Table("evaluations")
 public class Evaluation extends Model {
 
-    public Long getStudentId() {
-        return getLong("student_id");
+    public Integer getEvaluationId(){
+        return getInteger("id");
     }
 
-    public void setStudentId(Long studentId) {
-        set("student_id", studentId);
-    }
-
-    public Long getSubjectId() {
-        return getLong("subject_id");
-    }
-
-    public void setSubjectId(Long subjectId) {
-        set("subject_id", subjectId);
-    }
-
-    public Date getEvaluationDate() {
+    public Date getEvaluationDate(){
         return getDate("evaluation_date");
     }
 
-    public void setEvaluationDate(Date date) {
-        set("evaluation_date", date);
+    public void setEvaluationDate(Date eval_date){
+        set("evaluation_date", eval_date);
     }
 
-    public Integer getEvaluationNote() {
-        return getInteger("evaluation_note");
+    public Double getEvaluationGrade(){
+        return getDouble("grade");
     }
 
-    public void setEvaluationNote(Integer note) {
-        set("evaluation_note", note);
+    public void setEvaluationGrade(Double grade){
+        set("grade", grade);
     }
 
-    public String getConditionType() {
-        return getString("condition_type");
+    public Integer getEvaluationEnrollementId(){
+        return getInteger("enrollment_id");
     }
 
-    public void setConditionType(String conditionType) {
-        set("condition_type", conditionType);
+    public void setEvaluationEnrollementId(Integer enrollment_id){
+        set("enrollment_id", enrollment_id);
     }
+
 }
