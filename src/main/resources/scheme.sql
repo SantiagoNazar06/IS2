@@ -59,7 +59,7 @@ CREATE TABLE teacher_subject (
     teacher_id INTEGER NOT NULL,
     subject_id INTEGER NOT NULL,
     FOREIGN KEY (teacher_id) REFERENCES teachers(id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject),
+    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject)
 );
 
 DROP TABLE IF EXISTS enrollments;

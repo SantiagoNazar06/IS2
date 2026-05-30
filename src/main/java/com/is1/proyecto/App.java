@@ -42,6 +42,10 @@ public class App {
 
         // --- Configuración de la base de datos ---
         DBConfigSingleton dbConfig = DBConfigSingleton.getInstance();
+
+        // Inicializa el schema si la DB esta vacia (ejecuta scheme.sql)
+        dbConfig.bootstrap();
+
         DBConnectionFilter.init(
             dbConfig.getDriver(), 
             dbConfig.getDbUrl(), 
