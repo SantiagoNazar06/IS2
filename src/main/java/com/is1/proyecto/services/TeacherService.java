@@ -1,7 +1,17 @@
 package com.is1.proyecto.services;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import com.is1.proyecto.dto.StudentWithGradeDTO;
+import com.is1.proyecto.models.Enrollment;
+import com.is1.proyecto.models.Evaluation;
 import com.is1.proyecto.models.Person;
+import com.is1.proyecto.models.Student;
+import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.models.Teacher;
+import com.is1.proyecto.models.TeacherSubject;
 
 /**
  * Servicio para operaciones relacionadas con profesores.
@@ -107,5 +117,64 @@ public class TeacherService {
             e.printStackTrace();
             return TeacherRegisterResult.error("Error interno al crear la cuenta. Intente de nuevo.");
         }
+    }
+
+    /**
+     * Obtiene el listado de alumnos inscriptos en una materia,
+     * verificando que el docente esté asignado a ella.
+     *
+     * @param teacherId ID del docente
+     * @param subjectId ID de la materia
+     * @return Lista de StudentWithGradeDTO con datos y notas
+     * @throws IllegalArgumentException si el teacher no existe,
+     *         no está asignado a la materia, o la materia no existe
+     */
+    public List<StudentWithGradeDTO> getStudentsBySubject(Integer teacherId, Integer subjectId){
+        Teacher teacher = Teacher.findById(teacherId);
+        if(teacher == null){
+            throw new IllegalArgumentException("Teacher not found");
+        }
+
+        TeacherSubject assignment = TeacherSubject.findFirst("teacher_id = ? AND subject_id = ?", teacherId, subjectId);
+        if(assignment == null){
+            throw new IllegalArgumentException("Teacher not assigned to this subject");
+        }
+
+        Subject subject = Subject.findById(subjectId);
+        if (subject == null) {
+            throw new IllegalArgumentException("Subject not found");
+        }
+
+        List<Enrollment> enrollments = Enrollment.where(
+            "subject_id = ? AND status = ?", subjectId, "ENROLLED"
+        );
+
+        List<StudentWithGradeDTO> students = new ArrayList<>();
+        
+        for (Enrollment enrollment : enrollments) {
+            Student student = Student.findById(enrollment.getStudentId());
+            Person person = student.getPerson();
+            String fullName = person.getFirstName() + " " + person.getLastName();
+
+            Evaluation eval = Evaluation.findFirst("enrollment_id = ?", enrollment.getId());
+            
+            Double grade = null;
+            String gradeDate = null;
+            
+            if (eval != null) {
+                grade = eval.getEvaluationGrade();
+                Date date = eval.getEvaluationDate();
+                gradeDate = date != null ? date.toString() : null;
+            }
+
+            students.add(new StudentWithGradeDTO(
+                (Long) student.getId(),
+                fullName,
+                enrollment.getCreatedAt(),
+                grade,
+                gradeDate));
+        }
+
+        return students;
     }
 }
