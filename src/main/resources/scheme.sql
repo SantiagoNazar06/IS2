@@ -52,6 +52,16 @@ CREATE TABLE careers (
     career_duration INTEGER NOT NULL CHECK(career_duration > 0)
 );
 
+DROP TABLE IF EXISTS teacher_subject;
+
+CREATE TABLE teacher_subject (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL,
+    subject_id INTEGER NOT NULL,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject),
+);
+
 DROP TABLE IF EXISTS enrollments;
 
 CREATE TABLE enrollments (

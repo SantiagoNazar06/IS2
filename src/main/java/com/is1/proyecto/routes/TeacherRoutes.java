@@ -1,5 +1,7 @@
 package com.is1.proyecto.routes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.is1.proyecto.dto.StudentWithGradeDTO;
 import com.is1.proyecto.services.TeacherService;
 import spark.ModelAndView;
 import spark.Request;
@@ -7,6 +9,7 @@ import spark.Response;
 import spark.template.mustache.MustacheTemplateEngine;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.*;
@@ -17,10 +20,12 @@ import static spark.Spark.*;
 public class TeacherRoutes {
 
     private final TeacherService teacherService;
+    private final ObjectMapper objectMapper;
     private final MustacheTemplateEngine templateEngine;
 
     public TeacherRoutes(TeacherService teacherService) {
         this.teacherService = teacherService;
+        this.objectMapper = new ObjectMapper();
         this.templateEngine = new MustacheTemplateEngine();
     }
 
@@ -33,6 +38,9 @@ public class TeacherRoutes {
 
         // POST: Crea un nuevo teacher en la base de datos
         post("/register_teacher", this::handleRegisterTeacher);
+
+        // GET: Retorna listado de alumnos inscriptos en una materia del docente
+        get("/teachers/:id/subjects/:subjectId/students", this::handleGetStudents);
     }
 
     /**
@@ -71,5 +79,54 @@ public class TeacherRoutes {
         res.status(result.statusCode);
         res.redirect(result.redirectUrl);
         return ""; // Retorna una cadena vacía ya que la respuesta ya fue redirigida.
+    }
+
+    /**
+     * GET /teachers/:id/subjects/:subjectId/students
+     * <p>
+     * Retorna el listado de alumnos inscriptos en una materia,
+     * verificando que el docente esté asignado a ella.
+     * </p>
+     */
+    Object handleGetStudents(Request req, Response res) {
+        res.type("application/json");
+        try {
+            int teacherId = Integer.parseInt(req.params(":id"));
+            int subjectId = Integer.parseInt(req.params(":subjectId"));
+
+            List<StudentWithGradeDTO> students =
+                teacherService.getStudentsBySubject(teacherId, subjectId);
+
+            res.status(200);
+            return objectMapper.writeValueAsString(students);
+
+        } catch (IllegalArgumentException e) {
+            String msg = e.getMessage();
+            int status;
+            if ("Teacher not found".equals(msg) || "Subject not found".equals(msg)) {
+                status = 404;
+            } else if ("Teacher not assigned to this subject".equals(msg)) {
+                status = 403;
+            } else {
+                status = 400;
+            }
+            res.status(status);
+            return toJson(Map.of("error", msg));
+
+        } catch (Exception e) {
+            res.status(500);
+            return toJson(Map.of("error", "Internal server error"));
+        }
+    }
+
+    /**
+     * Convierte un objeto a JSON usando Jackson ObjectMapper.
+     */
+    private String toJson(Object data) {
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 }

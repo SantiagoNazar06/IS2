@@ -82,6 +82,8 @@
           <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
               <systemPropertyVariables>
                 <db.url>${db.url}</db.url>
               </systemPropertyVariables>
@@ -101,12 +103,6 @@
     </profile>
   </profiles>
   <dependencies>
-    <dependency>
-      <groupId>org.xerial</groupId>
-      <artifactId>sqlite-jdbc</artifactId>
-      <version>3.45.3.0</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -183,7 +179,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <sqlite-jdbc.version>3.45.1.0</sqlite-jdbc.version>
+    <sqlite-jdbc.version>3.45.3.0</sqlite-jdbc.version>
     <maven.compiler.source>11</maven.compiler.source>
     <jackson.version>2.17.1</jackson.version>
     <junit.jupiter.version>5.10.0</junit.jupiter.version>
