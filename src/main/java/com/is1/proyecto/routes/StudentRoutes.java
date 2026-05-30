@@ -1,6 +1,13 @@
 package com.is1.proyecto.routes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.is1.proyecto.models.Enrollment;
+import com.is1.proyecto.models.Student;
+import com.is1.proyecto.models.Subject;
+import com.is1.proyecto.services.CorrelationEngine;
+import com.is1.proyecto.services.PeriodValidator;
 import com.is1.proyecto.services.StudentService;
+import com.is1.proyecto.services.ValidationResult;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -11,33 +18,24 @@ import java.util.Map;
 
 import static spark.Spark.*;
 
-/**
- * Rutas relacionadas con el registro de estudiantes.
- */
 public class StudentRoutes {
 
     private final StudentService studentService;
+    private final ObjectMapper objectMapper;
     private final MustacheTemplateEngine templateEngine;
 
-    public StudentRoutes(StudentService studentService) {
+    public StudentRoutes(StudentService studentService, ObjectMapper objectMapper) {
         this.studentService = studentService;
+        this.objectMapper = objectMapper;
         this.templateEngine = new MustacheTemplateEngine();
     }
 
-    /**
-     * Registra todas las rutas de estudiante en Spark.
-     */
     public void register() {
-        // GET: Muestra el formulario de registro de estudiante
         get("/register_student", this::showStudentForm, templateEngine);
-
-        // POST: Crea un nuevo student en la base de datos
         post("/register_student", this::handleRegisterStudent);
+        post("/students/:id/enrollments", this::handleEnroll);
     }
 
-    /**
-     * GET /register_student - Muestra el formulario de registro de estudiante.
-     */
     private ModelAndView showStudentForm(Request req, Response res) {
         Map<String, Object> model = new HashMap<>();
         String errorMessage = req.queryParams("error");
@@ -51,11 +49,7 @@ public class StudentRoutes {
         return new ModelAndView(model, "student_form.mustache");
     }
 
-    /**
-     * POST /register_student - Procesa el formulario de registro de estudiante.
-     */
     private Object handleRegisterStudent(Request req, Response res) {
-        // Obtenemos los datos del formulario de registro de estudiante
         String dni = req.queryParams("dni");
         String type = req.queryParams("student_type");
         String firstName = req.queryParams("firstName");
@@ -71,6 +65,139 @@ public class StudentRoutes {
 
         res.status(result.statusCode);
         res.redirect(result.redirectUrl);
-        return ""; // Retorna una cadena vacía ya que la respuesta ya fue redirigida.
+        return "";
+    }
+
+    // AC-1: POST /students/:id/enrollments
+    private Object handleEnroll(Request req, Response res) throws Exception {
+        res.type("application/json");
+        try {
+            // AC-5: verificar autenticación (SecurityFilter ya garantiza sesión activa,
+            // pero chequeamos role por si acaso)
+            String role = req.session().attribute("userRole");
+            if (role == null) {
+                res.status(401);
+                return objectMapper.writeValueAsString(
+                    Map.of("error", "No autenticado. Inicia sesión para continuar."));
+            }
+
+            long studentId;
+            try {
+                studentId = Long.parseLong(req.params(":id"));
+            } catch (NumberFormatException e) {
+                res.status(400);
+                return objectMapper.writeValueAsString(Map.of("error", "ID de estudiante inválido."));
+            }
+
+            // AC-5: STUDENT solo puede inscribirse a sí mismo
+            if (!"ADMIN".equals(role)) {
+                Long sessionStudentId = req.session().attribute("studentId");
+                if (sessionStudentId == null || sessionStudentId.longValue() != studentId) {
+                    res.status(403);
+                    return objectMapper.writeValueAsString(
+                        Map.of("error", "No autorizado: solo puedes inscribirte a ti mismo."));
+                }
+            }
+
+            // Parsear body JSON
+            Map<?, ?> body;
+            try {
+                body = objectMapper.readValue(req.body(), Map.class);
+            } catch (Exception e) {
+                res.status(400);
+                return objectMapper.writeValueAsString(Map.of("error", "Body JSON inválido o ausente."));
+            }
+
+            Object subjectIdRaw = body.get("subjectId");
+            Object periodRaw = body.get("period");
+
+            if (subjectIdRaw == null || periodRaw == null) {
+                res.status(400);
+                return objectMapper.writeValueAsString(
+                    Map.of("error", "Se requieren los campos 'subjectId' y 'period'."));
+            }
+
+            long subjectId;
+            try {
+                subjectId = ((Number) subjectIdRaw).longValue();
+            } catch (ClassCastException e) {
+                res.status(400);
+                return objectMapper.writeValueAsString(
+                    Map.of("error", "El campo 'subjectId' debe ser un número."));
+            }
+
+            String period = periodRaw.toString();
+
+            // AC-6: validar formato YYYY-S
+            if (!PeriodValidator.isValidFormat(period)) {
+                res.status(400);
+                return objectMapper.writeValueAsString(
+                    Map.of("error", "Formato de período inválido. Use YYYY-S (ej. 2024-1 o 2024-2)."));
+            }
+
+            // AC-7: no permitir período pasado
+            if (PeriodValidator.isPastPeriod(period)) {
+                res.status(400);
+                return objectMapper.writeValueAsString(
+                    Map.of("error", "No se puede inscribir a un período pasado."));
+            }
+
+            // Verificar que el estudiante exista
+            Student student = Student.findById(studentId);
+            if (student == null) {
+                res.status(404);
+                return objectMapper.writeValueAsString(Map.of("error", "Estudiante no encontrado."));
+            }
+
+            // Verificar que la materia exista
+            Subject subject = Subject.findFirst("id_subject = ?", subjectId);
+            if (subject == null) {
+                res.status(404);
+                return objectMapper.writeValueAsString(Map.of("error", "Materia no encontrada."));
+            }
+
+            // AC-2: verificar inscripción duplicada
+            Enrollment existing = Enrollment.findFirst(
+                "student_id = ? AND subject_id = ? AND period = ?", studentId, subjectId, period);
+            if (existing != null) {
+                res.status(400);
+                return objectMapper.writeValueAsString(Map.of(
+                    "error", "El estudiante ya está inscripto en esta materia para el período " + period + "."));
+            }
+
+            // AC-2/AC-3/AC-4: validar correlatividades
+            ValidationResult result = new CorrelationEngine().canEnroll(studentId, subjectId);
+            if (!result.isAllowed()) {
+                res.status(400);
+                return objectMapper.writeValueAsString(Map.of(
+                    "error", result.getMessage(),
+                    "reason", result.getReason(),
+                    "missingPrerequisites", result.getMissingPrerequisites()));
+            }
+
+            // AC-2: crear la inscripción
+            Enrollment enrollment = new Enrollment();
+            enrollment.setStudentId(studentId);
+            enrollment.setSubjectId(subjectId);
+            enrollment.setPeriod(period);
+            enrollment.setStatus("ENROLLED");
+            enrollment.saveIt();
+
+            res.status(201);
+            return objectMapper.writeValueAsString(Map.of(
+                "message", "Inscripción realizada exitosamente.",
+                "enrollment", Map.of(
+                    "id", enrollment.getId(),
+                    "studentId", studentId,
+                    "subjectId", subjectId,
+                    "period", period,
+                    "status", "ENROLLED",
+                    "createdAt", enrollment.getString("created_at"))));
+
+        } catch (Exception e) {
+            res.status(500);
+            return objectMapper.writeValueAsString(
+                Map.of("error", "Error interno del servidor: " + e.getMessage()));
+        }
     }
 }
