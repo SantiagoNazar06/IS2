@@ -34,7 +34,7 @@ public class App {
      */
     public static void main(String[] args) {
         // --- Configuración del servidor ---
-        port(8080); // Configura el puerto en el que la aplicación Spark escuchará las peticiones (por defecto es 4567).
+        port(Integer.parseInt(System.getProperty("server.port", "8080"))); // Configura el puerto desde system property (default 8080).
 
         // --- Configuración de la base de datos ---
         DBConfigSingleton dbConfig = DBConfigSingleton.getInstance();
