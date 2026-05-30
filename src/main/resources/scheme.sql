@@ -83,17 +83,3 @@ CREATE TABLE conditions (
     CHECK(type IN ('REGULAR', 'APROBADA')),
     CHECK(subject_id != prerequisite_subject_id)
 );
-
-DROP TABLE IF EXISTS enrollments;
-
-CREATE TABLE enrollments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER NOT NULL,
-    subject_id INTEGER NOT NULL,
-    period TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'ENROLLED' CHECK(status IN('ENROLLED', 'DROPPED', 'COMPLETED')),
-    created_at TEXT NOT NULL,
-    FOREIGN KEY (student_id) REFERENCES students(id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject),
-    UNIQUE(student_id, subject_id, period)
-)
