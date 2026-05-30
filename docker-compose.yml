@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    volumes:
+      - ./db:/app/db
+    environment:
+      DB_URL: jdbc:sqlite:./db/dev.db
+      SERVER_PORT: "${SERVER_PORT:-8080}"
