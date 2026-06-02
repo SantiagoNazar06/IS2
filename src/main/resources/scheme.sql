@@ -53,6 +53,20 @@ CREATE TABLE careers (
     career_duration INTEGER NOT NULL CHECK(career_duration > 0)
 );
 
+DROP TABLE IF EXISTS enrollments;
+
+CREATE TABLE enrollments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    subject_id INTEGER NOT NULL,
+    period TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ENROLLED' CHECK(status IN('ENROLLED', 'DROPPED', 'COMPLETED')),
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject),
+    UNIQUE(student_id, subject_id, period)
+);
+
 DROP TABLE IF EXISTS evaluations;
 
 CREATE TABLE evaluations (
@@ -65,6 +79,7 @@ CREATE TABLE evaluations (
     FOREIGN KEY (student_id) REFERENCES students(id),
     FOREIGN KEY (subject_id) REFERENCES subjects(id_subject)
 );
+
 
 DROP TABLE IF EXISTS conditions;
 

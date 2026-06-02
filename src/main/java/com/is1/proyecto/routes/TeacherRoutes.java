@@ -185,4 +185,12 @@ public class TeacherRoutes {
         res.redirect(result.redirectUrl);
         return ""; // Retorna una cadena vacía ya que la respuesta ya fue redirigida.
     }
+
+    /**
+     * GET /teachers/:id/subjects/:subjectId/students
+     * <p>
+     * Retorna el listado de alumnos inscriptos en una materia,
+     * verificando que el docente esté asignado a ella.
+     * </p>
+     */
 }

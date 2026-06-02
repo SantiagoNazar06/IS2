@@ -111,33 +111,27 @@ public class TeacherService {
         }
     }
 
-    // AC-5: verifica si un docente está asignado a una materia
     public boolean verifyAssignment(Long teacherId, Long subjectId) {
         return teacherRepository.existsAssignment(teacherId, subjectId);
     }
 
-    // AC-1 (lista): todos los docentes con datos personales
     public List<Map<String, Object>> getAllTeachers() {
         return teacherRepository.findAllWithPersons();
     }
 
-    // AC-6: datos combinados de docente y persona
     public Map<String, Object> getTeacherWithPerson(Long teacherId) {
         return teacherRepository.findWithPerson(teacherId);
     }
 
-    // AC-1 (detalle): materias asignadas con rol, período y cantidad de alumnos evaluados
     public List<Map<String, Object>> getAssignedSubjects(Long teacherId) {
         return teacherRepository.findAssignedSubjectsWithCount(teacherId);
     }
 
-    // AC-2 / AC-3: alumnos de una materia con notas (solo si el docente está asignado)
     public List<Map<String, Object>> getSubjectStudents(Long teacherId, Long subjectId) {
         if (!verifyAssignment(teacherId, subjectId)) return Collections.emptyList();
         return teacherRepository.findSubjectStudents(subjectId);
     }
 
-    // AC-4: actas de calificaciones de una materia
     public List<Map<String, Object>> getGrades(Long teacherId, Long subjectId) {
         return getSubjectStudents(teacherId, subjectId);
     }

@@ -158,10 +158,15 @@ public class UserRoutes {
             res.status(200); // OK.
             // Incluye el rol del usuario en la sesión
             authService.createSession(req, username, loginResult.user.getId(), loginResult.user.getRole());
-            // Guarda teacherId en sesión para control de ownership en rutas de docentes
             if ("TEACHER".equals(loginResult.user.getRole())) {
                 Long teacherId = loginResult.user.getTeacherId();
                 req.session().attribute("teacherId", teacherId);
+            }
+            if ("STUDENT".equals(loginResult.user.getRole())) {
+                Long studentId = loginResult.user.getStudentId();
+                if (studentId != null && studentId != 0) {
+                    req.session().attribute("studentId", studentId);
+                }
             }
             model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
             model.put("role", loginResult.user.getRole()); // Añade el rol al modelo
