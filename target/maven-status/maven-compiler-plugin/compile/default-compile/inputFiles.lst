@@ -1,12 +1,10 @@
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/security/SecurityFilter.java
-/home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/services/CorrelationEngine.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/repositories/UserRepository.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/routes/CareerRoutes.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/Evaluation.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/ConditionType.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/Subject.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/User.java
-/home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/services/PeriodValidator.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/dto/PersonDTO.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/routes/TeacherRoutes.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/services/TeacherService.java
@@ -18,7 +16,6 @@
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/Condition.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/repositories/CareerRepository.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/security/SecurityConfig.java
-/home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/services/ValidationResult.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/factories/PersonFactoryInterface.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/Person.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/routes/UserRoutes.java
@@ -37,7 +34,6 @@
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/config/DBConnectionFilter.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/repositories/PersonRepository.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/services/StudentService.java
-/home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/models/Enrollment.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/security/Role.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/exceptions/ValidationException.java
 /home/matheo/Matheo/Uni/3ro/1erCuatri/IS2/proyecto/IS2/src/main/java/com/is1/proyecto/App.java

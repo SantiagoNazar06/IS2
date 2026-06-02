@@ -1,6 +1,6 @@
 com/is1/proyecto/services/StudentService$StudentData.class
 com/is1/proyecto/services/UserService.class
-com/is1/proyecto/services/ValidationResult$MissingPrerequisite.class
+com/is1/proyecto/repositories/TeacherRepository.class
 com/is1/proyecto/models/Student.class
 com/is1/proyecto/config/DBConfigSingleton.class
 com/is1/proyecto/repositories/CareerRepository.class
@@ -13,7 +13,6 @@ com/is1/proyecto/factories/PersonFactory.class
 com/is1/proyecto/security/SecurityConfig.class
 com/is1/proyecto/routes/CareerRoutes.class
 com/is1/proyecto/security/AuthService.class
-com/is1/proyecto/services/PeriodValidator.class
 com/is1/proyecto/services/TeacherService$TeacherRegisterResult.class
 com/is1/proyecto/ports/in/PersonServiceInterface.class
 com/is1/proyecto/routes/StudentRoutes.class
@@ -25,10 +24,9 @@ com/is1/proyecto/factories/PersonFactoryInterface.class
 com/is1/proyecto/models/User.class
 com/is1/proyecto/config/DBConnectionFilter.class
 com/is1/proyecto/repositories/PersonRepository.class
-com/is1/proyecto/services/ValidationResult.class
 com/is1/proyecto/services/TeacherService.class
 com/is1/proyecto/models/Person.class
-com/is1/proyecto/services/CorrelationEngine.class
+com/is1/proyecto/models/TeacherAssignment.class
 com/is1/proyecto/services/UserService$RegisterResult.class
 com/is1/proyecto/models/Teacher.class
 com/is1/proyecto/routes/SubjectRoutes.class
@@ -42,7 +40,6 @@ com/is1/proyecto/services/CareerService.class
 com/is1/proyecto/ports/out/PersonRepositoryInterface.class
 com/is1/proyecto/services/CareerService$CareerRegisterResult.class
 com/is1/proyecto/repositories/ConditionRepository.class
-com/is1/proyecto/models/Enrollment.class
 com/is1/proyecto/exceptions/ValidationException.class
 com/is1/proyecto/services/StudentService$StudentRegisterResult.class
 com/is1/proyecto/services/PersonService.class

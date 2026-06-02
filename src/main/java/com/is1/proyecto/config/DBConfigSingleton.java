@@ -1,7 +1,7 @@
 // Archivo: com/is1/proyecto/config/DBConfigSingleton.java
 package com.is1.proyecto.config;
 
-import org.javalite.activejdbc.Base; // Necesitarás esta importación para usar Base.open y Base.close
+import org.javalite.activejdbc.Base;
 
 public final class DBConfigSingleton {
 
@@ -27,12 +27,15 @@ public final class DBConfigSingleton {
 
     // Métodos para abrir y cerrar la conexión
     public void openConnection() {
-        // Utiliza los valores de las propiedades de la clase para abrir la conexión
-        Base.open(this.driver, getDbUrl(), this.user, this.pass);
+        if (!Base.hasConnection()) {
+            Base.open(this.driver, getDbUrl(), this.user, this.pass);
+        }
     }
 
     public void closeConnection() {
-        Base.close();
+        if (Base.hasConnection()) {
+            Base.close();
+        }
     }
 
     // Getters existentes

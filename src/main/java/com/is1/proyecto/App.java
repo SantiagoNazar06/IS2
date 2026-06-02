@@ -4,6 +4,7 @@ import com.is1.proyecto.config.DBConfigSingleton; // Clase Singleton para la con
 import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la base de datos.
 import com.is1.proyecto.repositories.CareerRepository;
 import com.is1.proyecto.repositories.ConditionRepository;
+import com.is1.proyecto.repositories.TeacherRepository;
 import com.is1.proyecto.routes.CareerRoutes;
 import com.is1.proyecto.routes.StudentRoutes;
 import com.is1.proyecto.routes.SubjectRoutes;
@@ -58,7 +59,8 @@ public class App {
         // Los servicios se crean una sola vez y se inyectan en las rutas
         AuthService authService = new AuthService();
         UserService userService = new UserService(authService);
-        TeacherService teacherService = new TeacherService();
+        TeacherRepository teacherRepository = new TeacherRepository();
+        TeacherService teacherService = new TeacherService(teacherRepository);
         StudentService studentService = new StudentService();
         CareerService careerService = new CareerService(careerRepository);
         ConditionService conditionService = new ConditionService(conditionRepository);

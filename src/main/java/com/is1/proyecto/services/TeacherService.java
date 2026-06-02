@@ -2,11 +2,22 @@ package com.is1.proyecto.services;
 
 import com.is1.proyecto.models.Person;
 import com.is1.proyecto.models.Teacher;
+import com.is1.proyecto.repositories.TeacherRepository;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Servicio para operaciones relacionadas con profesores.
  */
 public class TeacherService {
+
+    private final TeacherRepository teacherRepository;
+
+    public TeacherService(TeacherRepository teacherRepository) {
+        this.teacherRepository = teacherRepository;
+    }
 
     /**
      * Resultado de registro de profesor.
@@ -60,17 +71,12 @@ public class TeacherService {
 
     /**
      * Registra un nuevo profesor en la base de datos.
-     * 
-     * @param data Datos del profesor
-     * @return TeacherRegisterResult con el resultado de la operación
      */
     public TeacherRegisterResult registerTeacher(TeacherData data) {
         try {
-            // Buscar si ya existe una persona con el mismo DNI
             Person ps = Person.findFirst("dni = ?", data.dni);
 
             if (ps == null) {
-                // Si no existe, la creamos
                 ps = new Person();
                 ps.set("dni", data.dni);
                 ps.set("firstName", data.firstName);
@@ -79,22 +85,18 @@ public class TeacherService {
                 ps.set("email", data.email);
                 ps.saveIt();
             } else {
-                // Si ya existe, actualizamos por si cambió algún dato
                 ps.set("firstName", data.firstName);
                 ps.set("lastName", data.lastName);
                 ps.set("phone", data.phone);
                 ps.set("email", data.email);
                 ps.saveIt();
             }
-            
-            // Verificar si ya existe un profesor asociado a esa persona
-            Teacher existingTeacher = Teacher.findFirst("id_persona = ?", ps.getId());
 
+            Teacher existingTeacher = Teacher.findFirst("id_persona = ?", ps.getId());
             if (existingTeacher != null) {
                 return TeacherRegisterResult.duplicate(data.dni);
             }
 
-            // Crear nuevo registro de profesor usando la persona existente
             Teacher th = new Teacher();
             th.set("id_persona", ps.getId());
             th.set("nroLegajo", data.nroLegajo);
@@ -107,5 +109,36 @@ public class TeacherService {
             e.printStackTrace();
             return TeacherRegisterResult.error("Error interno al crear la cuenta. Intente de nuevo.");
         }
+    }
+
+    // AC-5: verifica si un docente está asignado a una materia
+    public boolean verifyAssignment(Long teacherId, Long subjectId) {
+        return teacherRepository.existsAssignment(teacherId, subjectId);
+    }
+
+    // AC-1 (lista): todos los docentes con datos personales
+    public List<Map<String, Object>> getAllTeachers() {
+        return teacherRepository.findAllWithPersons();
+    }
+
+    // AC-6: datos combinados de docente y persona
+    public Map<String, Object> getTeacherWithPerson(Long teacherId) {
+        return teacherRepository.findWithPerson(teacherId);
+    }
+
+    // AC-1 (detalle): materias asignadas con rol, período y cantidad de alumnos evaluados
+    public List<Map<String, Object>> getAssignedSubjects(Long teacherId) {
+        return teacherRepository.findAssignedSubjectsWithCount(teacherId);
+    }
+
+    // AC-2 / AC-3: alumnos de una materia con notas (solo si el docente está asignado)
+    public List<Map<String, Object>> getSubjectStudents(Long teacherId, Long subjectId) {
+        if (!verifyAssignment(teacherId, subjectId)) return Collections.emptyList();
+        return teacherRepository.findSubjectStudents(subjectId);
+    }
+
+    // AC-4: actas de calificaciones de una materia
+    public List<Map<String, Object>> getGrades(Long teacherId, Long subjectId) {
+        return getSubjectStudents(teacherId, subjectId);
     }
 }

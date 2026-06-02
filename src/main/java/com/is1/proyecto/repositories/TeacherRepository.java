@@ -78,6 +78,94 @@ public class TeacherRepository {
         }
     }
 
+    public boolean existsAssignment(Long teacherId, Long subjectId) {
+        db.openConnection();
+        try {
+            String sql = "SELECT id FROM teacher_assignments WHERE teacher_id = ? AND subject_id = ? LIMIT 1";
+            return Base.firstCell(sql, teacherId, subjectId) != null;
+        } finally {
+            db.closeConnection();
+        }
+    }
+
+    public List<Map<String, Object>> findAllWithPersons() {
+        db.openConnection();
+        try {
+            String sql =
+                "SELECT t.id AS teacherId, t.nroLegajo AS legajo, " +
+                "       p.firstName, p.lastName, p.dni, p.email, p.phone " +
+                "FROM teachers t JOIN persons p ON p.id = t.id_persona";
+            List<Map> rows = Base.findAll(sql);
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Map row : rows) {
+                result.add(new HashMap<>(row));
+            }
+            return result;
+        } finally {
+            db.closeConnection();
+        }
+    }
+
+    public Map<String, Object> findWithPerson(Long teacherId) {
+        db.openConnection();
+        try {
+            String sql =
+                "SELECT t.id AS teacherId, t.nroLegajo AS legajo, " +
+                "       p.firstName, p.lastName, p.dni, p.email, p.phone " +
+                "FROM teachers t JOIN persons p ON p.id = t.id_persona " +
+                "WHERE t.id = ?";
+            List<Map> rows = Base.findAll(sql, teacherId);
+            return rows.isEmpty() ? null : new HashMap<>(rows.get(0));
+        } finally {
+            db.closeConnection();
+        }
+    }
+
+    public List<Map<String, Object>> findAssignedSubjectsWithCount(Long teacherId) {
+        db.openConnection();
+        try {
+            String sql =
+                "SELECT s.id_subject AS subjectId, s.subject_name AS subjectName, " +
+                "       ta.role, ta.period, " +
+                "       COUNT(e.id_evaluations) AS studentCount " +
+                "FROM teacher_assignments ta " +
+                "JOIN subjects s ON s.id_subject = ta.subject_id " +
+                "LEFT JOIN evaluations e ON e.subject_id = ta.subject_id " +
+                "WHERE ta.teacher_id = ? " +
+                "GROUP BY ta.subject_id, ta.role, ta.period";
+            List<Map> rows = Base.findAll(sql, teacherId);
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Map row : rows) {
+                result.add(new HashMap<>(row));
+            }
+            return result;
+        } finally {
+            db.closeConnection();
+        }
+    }
+
+    public List<Map<String, Object>> findSubjectStudents(Long subjectId) {
+        db.openConnection();
+        try {
+            String sql =
+                "SELECT st.id AS studentId, st.student_type AS studentType, " +
+                "       p.firstName, p.lastName, p.dni, p.email, " +
+                "       e.evaluation_note AS grade, e.evaluation_date AS gradeDate " +
+                "FROM evaluations e " +
+                "JOIN students st ON st.id = e.student_id " +
+                "JOIN persons p ON p.id = st.id_person " +
+                "WHERE e.subject_id = ?";
+            List<Map> rows = Base.findAll(sql, subjectId);
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Map row : rows) {
+                result.add(new HashMap<>(row));
+            }
+            return result;
+        } finally {
+            db.closeConnection();
+        }
+    }
+
     // AC-5: materias asignadas a un docente con su rol y período
     public List<Map<String, Object>> getAssignedSubjects(Long teacherId) {
         db.openConnection();
