@@ -76,6 +76,11 @@ public class StudyPlanRoutes {
             @SuppressWarnings("unchecked")
             Map<String, Object> body = objectMapper.readValue(req.body(), Map.class);
 
+            if (body.get("year") == null || body.get("careerId") == null) {
+                res.status(400);
+                return toJson(Map.of("error", "Los campos 'year' y 'careerId' son obligatorios"));
+            }
+
             String name = (String) body.get("name");
             int year = ((Number) body.get("year")).intValue();
             int careerId = ((Number) body.get("careerId")).intValue();

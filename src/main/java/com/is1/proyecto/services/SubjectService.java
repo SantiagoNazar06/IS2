@@ -1,14 +1,15 @@
 package com.is1.proyecto.services;
 
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.is1.proyecto.dto.SubjectDTO;
 import com.is1.proyecto.exceptions.ValidationException;
 import com.is1.proyecto.models.Career;
 import com.is1.proyecto.models.StudyPlan;
 import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.repositories.SubjectRepository;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Servicio de Subject: Contiene la logica de negocio para la gestion de materias.
@@ -57,7 +58,7 @@ public class SubjectService {
         }
 
         // Validacion: codigo unico
-        Subject existing = repository.findByCode(code.trim());
+        Subject existing = repository.findByCode(code.trim().toUpperCase());
         if (existing != null) {
             throw new ValidationException("Ya existe una materia con el codigo " + code, "code");
         }
