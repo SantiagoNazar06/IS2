@@ -4,8 +4,9 @@ CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'ADMIN' CHECK(role IN('ADMIN', 'STUDENT')),
-    student_id INTEGER REFERENCES students(id)
+    role TEXT NOT NULL DEFAULT 'ADMIN' CHECK(role IN('ADMIN', 'STUDENT', 'TEACHER')),
+    student_id INTEGER REFERENCES students(id),
+    teacher_id INTEGER REFERENCES teachers(id)
 );
 
 DROP TABLE IF EXISTS persons;
