@@ -112,6 +112,7 @@ public class UserService {
             // Se recomienda usar `BCrypt.hashpw(password, BCrypt.gensalt())` como en la
             // ruta '/user/new').
             newUser.set("name", name); // Asigna el nombre al campo 'name'.
+            newUser.set("role", "STUDENT"); // Asigna rol STUDENT (BCrypt deferido)
             // TODO: Cifrar la contraseña antes de guardar
             newUser.set("password", password); // Asigna la contraseña al campo 'password'.
             newUser.saveIt(); // Guarda el nuevo usuario en la tabla 'users'.

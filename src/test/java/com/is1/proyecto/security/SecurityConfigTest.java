@@ -22,9 +22,21 @@ class SecurityConfigTest {
     @Test
     void isPublicRoute_registrationPagesArePublic() {
         assertTrue(SecurityConfig.isPublicRoute("/user/create"));
-        assertTrue(SecurityConfig.isPublicRoute("/user/new"));
-        assertTrue(SecurityConfig.isPublicRoute("/register_student"));
-        assertTrue(SecurityConfig.isPublicRoute("/register_teacher"));
+    }
+
+    @Test
+    void isPublicRoute_userNewIsNotPublic() {
+        assertFalse(SecurityConfig.isPublicRoute("/user/new"));
+    }
+
+    @Test
+    void isPublicRoute_registerTeacherIsNotPublic() {
+        assertFalse(SecurityConfig.isPublicRoute("/register_teacher"));
+    }
+
+    @Test
+    void isPublicRoute_registerStudentIsNotPublic() {
+        assertFalse(SecurityConfig.isPublicRoute("/register_student"));
     }
 
     @Test
@@ -95,6 +107,58 @@ class SecurityConfigTest {
         assertTrue(roles.contains(Role.ADMIN));
         assertTrue(roles.contains(Role.TEACHER));
         assertFalse(roles.contains(Role.STUDENT));
+    }
+
+    @Test
+    void getRequiredRoles_userNewRequiresAdmin() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/user/new");
+        assertNotNull(roles);
+        assertEquals(1, roles.size());
+        assertTrue(roles.contains(Role.ADMIN));
+    }
+
+    @Test
+    void getRequiredRoles_registerTeacherRequiresAdmin() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/register_teacher");
+        assertNotNull(roles);
+        assertEquals(1, roles.size());
+        assertTrue(roles.contains(Role.ADMIN));
+    }
+
+    @Test
+    void getRequiredRoles_registerStudentRequiresAdmin() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/register_student");
+        assertNotNull(roles);
+        assertEquals(1, roles.size());
+        assertTrue(roles.contains(Role.ADMIN));
+    }
+
+    @Test
+    void getRequiredRoles_subjectsRequiresAdminAndTeacher() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/subjects");
+        assertNotNull(roles);
+        assertEquals(2, roles.size());
+        assertTrue(roles.contains(Role.ADMIN));
+        assertTrue(roles.contains(Role.TEACHER));
+    }
+
+    @Test
+    void getRequiredRoles_studyPlansRequiresAllRoles() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/study-plans");
+        assertNotNull(roles);
+        assertEquals(3, roles.size());
+        assertTrue(roles.contains(Role.ADMIN));
+        assertTrue(roles.contains(Role.TEACHER));
+        assertTrue(roles.contains(Role.STUDENT));
+    }
+
+    @Test
+    void getRequiredRoles_gradesRequiresAdminAndTeacher() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/grades");
+        assertNotNull(roles);
+        assertEquals(2, roles.size());
+        assertTrue(roles.contains(Role.ADMIN));
+        assertTrue(roles.contains(Role.TEACHER));
     }
 
     @Test

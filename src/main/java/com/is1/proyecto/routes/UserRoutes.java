@@ -84,7 +84,7 @@ public class UserRoutes {
     /**
      * GET /dashboard - Muestra el dashboard del usuario autenticado.
      */
-    private ModelAndView showDashboard(Request req, Response res) {
+    ModelAndView showDashboard(Request req, Response res) {
         Map<String, Object> model = new HashMap<>(); // Modelo para la plantilla del dashboard.
 
         // 1. Verificar si el usuario ha iniciado sesión.
@@ -98,8 +98,10 @@ public class UserRoutes {
         // 2. Si el usuario está logueado, añade el nombre de usuario al modelo para la plantilla.
         model.put("username", authService.getCurrentUsername(req));
 
-        // 3. Renderiza la plantilla del dashboard con el nombre de usuario.
-        return new ModelAndView(model, "dashboard.mustache");
+        // 3. Renderiza el dashboard según el rol del usuario.
+        String role = req.session().attribute("userRole");
+        String template = dashboardTemplateForRole(role);
+        return new ModelAndView(model, template);
     }
 
     /**
@@ -165,9 +167,9 @@ public class UserRoutes {
                 }
             }
             model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
-            model.put("role", loginResult.user.getRole()); // Añade el rol al modelo
-            // Renderiza la plantilla del dashboard tras un login exitoso.
-            return new ModelAndView(model, "dashboard.mustache");
+            // Renderiza el dashboard según el rol del usuario.
+            String template = dashboardTemplateForRole(loginResult.user.getRole());
+            return new ModelAndView(model, template);
         } else {
             // Fallo de autenticación.
             res.status(401); // Unauthorized.
@@ -185,5 +187,14 @@ public class UserRoutes {
         String password = req.queryParams("password");
 
         return userService.addUserApi(name, password, res);
+    }
+
+    /**
+     * Devuelve el template de dashboard para el rol dado.
+     */
+    private String dashboardTemplateForRole(String role) {
+        if ("ADMIN".equals(role)) return "dashboard_admin.mustache";
+        if ("TEACHER".equals(role)) return "dashboard_teacher.mustache";
+        return "dashboard_student.mustache";
     }
 }

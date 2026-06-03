@@ -72,15 +72,6 @@ public class StudentRoutes {
     private Object handleEnroll(Request req, Response res) throws Exception {
         res.type("application/json");
         try {
-            // AC-5: verificar autenticación (SecurityFilter ya garantiza sesión activa,
-            // pero chequeamos role por si acaso)
-            String role = req.session().attribute("userRole");
-            if (role == null) {
-                res.status(401);
-                return objectMapper.writeValueAsString(
-                    Map.of("error", "No autenticado. Inicia sesión para continuar."));
-            }
-
             long studentId;
             try {
                 studentId = Long.parseLong(req.params(":id"));
@@ -90,13 +81,11 @@ public class StudentRoutes {
             }
 
             // AC-5: STUDENT solo puede inscribirse a sí mismo
-            if (!"ADMIN".equals(role)) {
-                Long sessionStudentId = req.session().attribute("studentId");
-                if (sessionStudentId == null || sessionStudentId.longValue() != studentId) {
-                    res.status(403);
-                    return objectMapper.writeValueAsString(
-                        Map.of("error", "No autorizado: solo puedes inscribirte a ti mismo."));
-                }
+            Long sessionStudentId = req.session().attribute("studentId");
+            if (sessionStudentId != null && sessionStudentId.longValue() != studentId) {
+                res.status(403);
+                return objectMapper.writeValueAsString(
+                    Map.of("error", "No autorizado: solo puedes inscribirte a ti mismo."));
             }
 
             // Parsear body JSON
