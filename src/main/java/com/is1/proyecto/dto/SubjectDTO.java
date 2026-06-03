@@ -2,17 +2,13 @@ package com.is1.proyecto.dto;
 
 /**
  * DTO unificado para la transferencia de datos de Subject.
- * <p>
  * Combina los campos de la entidad Subject (code, studyPlan, career) con los
  * campos del historial academico del estudiante (status, grade, period).
- * </p>
  *
- * <h3>Constructores disponibles</h3>
- * <ul>
- *   <li>Constructor completo (11 parametros): todos los campos</li>
- *   <li>Constructor parcial (5 parametros): solo historial academico (code y plan son null)</li>
- *   <li>Constructor parcial (7 parametros): solo entidad Subject (status, grade, period son null)</li>
- * </ul>
+ * Constructores disponibles
+ * Constructor completo (11 parametros): todos los campos
+ * Constructor parcial (5 parametros): solo historial academico (code y plan son null)
+ * Constructor parcial (7 parametros): solo entidad Subject (status, grade, period son null)
  */
 public class SubjectDTO {
 

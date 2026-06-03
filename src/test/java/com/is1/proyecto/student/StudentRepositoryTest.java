@@ -1,6 +1,5 @@
 package com.is1.proyecto.student;
 
-import com.is1.proyecto.config.DBConfigSingleton;
 import com.is1.proyecto.dto.EnrollmentDTO;
 import com.is1.proyecto.dto.GradeDTO;
 import com.is1.proyecto.dto.SubjectDTO;
@@ -13,8 +12,6 @@ import org.javalite.activejdbc.LazyList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,11 +30,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class StudentRepositoryTest {
 
-    @Mock
-    private DBConfigSingleton dbMock;
-
-    @InjectMocks
-    private StudentRepository repository;
+    private StudentRepository repository = new StudentRepository();
 
     @BeforeEach
     void setUp() {
@@ -67,8 +60,6 @@ public class StudentRepositoryTest {
 
             assertNotNull(result);
             assertSame(studentMock, result);
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -82,8 +73,6 @@ public class StudentRepositoryTest {
             Student result = repository.findByDni("nonexistent");
 
             assertNull(result);
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -103,8 +92,6 @@ public class StudentRepositoryTest {
             Student result = repository.findByDni("99999999");
 
             assertNull(result);
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -130,8 +117,6 @@ public class StudentRepositoryTest {
 
             assertNotNull(result);
             assertSame(studentMock, result);
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -145,8 +130,6 @@ public class StudentRepositoryTest {
             Student result = repository.findByPersonId(999L);
 
             assertNull(result);
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -191,8 +174,6 @@ public class StudentRepositoryTest {
             assertEquals("2024-01", results.get(0).getPeriod());
             assertEquals(20L, results.get(1).getSubjectId());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -212,8 +193,6 @@ public class StudentRepositoryTest {
             assertNotNull(results);
             assertTrue(results.isEmpty());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -273,8 +252,6 @@ public class StudentRepositoryTest {
             assertNull(results.get(1).getGrade());
             assertEquals("2024-02", results.get(1).getPeriod());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -297,8 +274,6 @@ public class StudentRepositoryTest {
             assertNotNull(results);
             assertTrue(results.isEmpty());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -347,8 +322,6 @@ public class StudentRepositoryTest {
             assertEquals("Fisica", results.get(1).getSubjectName());
             assertEquals(4.0, results.get(1).getGrade());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -371,8 +344,6 @@ public class StudentRepositoryTest {
             assertNotNull(results);
             assertTrue(results.isEmpty());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -417,8 +388,6 @@ public class StudentRepositoryTest {
             assertEquals(7.0, results.get(1).getGrade());
             assertEquals("2024-07-01", results.get(1).getDate());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -441,8 +410,6 @@ public class StudentRepositoryTest {
             assertNotNull(results);
             assertTrue(results.isEmpty());
 
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 }

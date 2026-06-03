@@ -41,11 +41,13 @@ public class PersonRepositoryIntegrationTest {
     @BeforeEach
     void setup() {
         repository = new PersonRepository();
+        Base.open("org.sqlite.JDBC", JDBC_URL, "", "");
     }
 
     @AfterEach
     void cleanDatabase() {
         repository.deleteAll();
+        Base.close();
     }
 
     @AfterAll
@@ -59,13 +61,10 @@ public class PersonRepositoryIntegrationTest {
 
     @Test
     void testCRUDCycle() {
-        Base.open("org.sqlite.JDBC", JDBC_URL, "", "");
         Person person = new Person();
         person.set("firstname", "Juan");
         person.set("lastname", "Perez");
         person.set("dni", "123");
-        Base.close();
-
 
         Person created = repository.create(person);
         assertNotNull(created.getId());

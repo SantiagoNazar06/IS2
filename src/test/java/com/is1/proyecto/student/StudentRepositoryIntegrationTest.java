@@ -169,14 +169,10 @@ public class StudentRepositoryIntegrationTest {
                 "INSERT INTO enrollments (student_id, subject_id, period, status, created_at) " +
                 "VALUES (?, ?, ?, ?, ?)",
                 otherStudentId, mathId, "2024-01", "ENROLLED", "2024-01-05");
-
-        Base.close();
     }
 
     @AfterEach
     void cleanDatabase() {
-        try { Base.close(); } catch (Exception ignored) { }
-        Base.open("org.sqlite.JDBC", JDBC_URL, "", "");
         Base.exec("DELETE FROM evaluations");
         Base.exec("DELETE FROM enrollments");
         Base.exec("DELETE FROM subjects");
