@@ -84,7 +84,7 @@ public class App {
 
         // --- Filtro de seguridad ---
         // Debe registrarse ANTES de las rutas para interceptar todas las requests
-        // El SecurityFilter valida autenticación, roles y aplica CORS
+        // El SecurityFilter valida autenticación y roles
         SecurityFilter.setAuthService(authService);
         SecurityFilter.register();
 

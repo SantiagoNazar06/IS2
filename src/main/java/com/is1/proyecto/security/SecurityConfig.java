@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * Configuración centralizada de seguridad.
- * Define rutas públicas, rutas protegidas con roles requeridos, CORS y códigos de error.
+ * Define rutas públicas, rutas protegidas con roles requeridos y códigos de error.
  */
 public class SecurityConfig {
 
@@ -76,33 +76,6 @@ public class SecurityConfig {
         // Rutas de evaluaciones - ADMIN y TEACHER
         PROTECTED_ROUTES.put("/evaluations", Set.of(Role.ADMIN, Role.TEACHER));
     }
-
-    // ==================== CORS CONFIGURATION ====================
-
-    /**
-     * Orígenes permitidos para CORS.
-     */
-    public static final String CORS_ALLOWED_ORIGINS = "http://localhost:3000";
-    
-    /**
-     * Métodos HTTP permitidos para CORS.
-     */
-    public static final String CORS_ALLOWED_METHODS = "GET, POST, PUT, DELETE, OPTIONS";
-
-    /**
-     * Headers permitidos para CORS.
-     */
-    public static final String CORS_ALLOWED_HEADERS = "Content-Type, Authorization";
-
-    /**
-     * Headers expuestos al cliente.
-     */
-    public static final String CORS_EXPOSED_HEADERS = "X-Total-Count, X-User-Role, Location";
-
-    /**
-     * Tiempo máximo de cache para preflight (en segundos).
-     */
-    public static final String CORS_MAX_AGE = "3600";
 
     // ==================== CÓDIGOS DE ERROR ====================
 
