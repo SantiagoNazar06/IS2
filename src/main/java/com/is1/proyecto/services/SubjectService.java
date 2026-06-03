@@ -203,13 +203,16 @@ public class SubjectService {
         }
 
         return new SubjectDTO(
-                subject.getId(),
-                subject.getCode(),
-                subject.getSubjectName(),
-                studyPlanId,
-                studyPlanName,
-                careerId,
-                careerName
+                subject.getId().longValue(),  // subjectId
+                subject.getSubjectName(),      // subjectName
+                null,                          // status (no aplica para entidad Subject)
+                null,                          // grade (no aplica)
+                null,                          // period (no aplica)
+                subject.getCode(),             // code
+                studyPlanId,                   // studyPlanId
+                studyPlanName,                 // studyPlanName
+                careerId,                      // careerId
+                careerName                     // careerName
         );
     }
 }
