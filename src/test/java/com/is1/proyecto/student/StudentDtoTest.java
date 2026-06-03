@@ -34,24 +34,30 @@ public class StudentDtoTest {
 
     @Test
     void testSubjectDTO_creationAndGetters() {
-        SubjectDTO dto = new SubjectDTO(1L, "Matematica", "ENROLLED", null, "2024-01");
+        SubjectDTO dto = new SubjectDTO(1L, "Matematica", "ENROLLED", null, "2024-01",
+                null, null, null, null, null);
 
         assertEquals(1L, dto.getSubjectId());
         assertEquals("Matematica", dto.getSubjectName());
         assertEquals("ENROLLED", dto.getStatus());
         assertNull(dto.getGrade());
         assertEquals("2024-01", dto.getPeriod());
+        assertNull(dto.getCode());
+        assertNull(dto.getStudyPlanId());
+        assertNull(dto.getCareerName());
     }
 
     @Test
     void testSubjectDTO_withGrade() {
-        SubjectDTO dto = new SubjectDTO(2L, "Fisica", "COMPLETED", 7.5, "2024-01");
+        SubjectDTO dto = new SubjectDTO(2L, "Fisica", "COMPLETED", 7.5, "2024-01",
+                null, null, null, null, null);
 
         assertEquals(2L, dto.getSubjectId());
         assertEquals("Fisica", dto.getSubjectName());
         assertEquals("COMPLETED", dto.getStatus());
         assertEquals(7.5, dto.getGrade());
         assertEquals("2024-01", dto.getPeriod());
+        assertNull(dto.getCode());
     }
 
     @Test

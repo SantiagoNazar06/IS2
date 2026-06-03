@@ -201,7 +201,18 @@ public class StudentRepository implements StudentRepositoryInterface {
             Double grade = toDouble(row.get("grade"));
             String period = (String) row.get("period");
 
-            result.add(new SubjectDTO(subjectId, subjectName, status, grade, period));
+            result.add(new SubjectDTO(
+                    subjectId,    // subjectId
+                    subjectName,  // subjectName
+                    status,       // status
+                    grade,        // grade
+                    period,       // period
+                    null,         // code (no disponible desde esta query)
+                    null,         // studyPlanId
+                    null,         // studyPlanName
+                    null,         // careerId
+                    null          // careerName
+            ));
         }
         return result;
     }

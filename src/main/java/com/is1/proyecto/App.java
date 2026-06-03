@@ -5,10 +5,13 @@ import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la 
 import com.is1.proyecto.repositories.CareerRepository;
 import com.is1.proyecto.repositories.EvaluationRepository;
 import com.is1.proyecto.repositories.ConditionRepository;
+import com.is1.proyecto.repositories.SubjectRepository;
+import com.is1.proyecto.repositories.StudyPlanRepository;
 import com.is1.proyecto.routes.CareerRoutes;
 import com.is1.proyecto.routes.EvaluationRoutes;
 import com.is1.proyecto.routes.StudentRoutes;
 import com.is1.proyecto.routes.SubjectRoutes;
+import com.is1.proyecto.routes.StudyPlanRoutes;
 import com.is1.proyecto.routes.TeacherRoutes;
 import com.is1.proyecto.routes.UserRoutes;
 import com.is1.proyecto.security.AuthService;
@@ -17,6 +20,8 @@ import com.is1.proyecto.services.CareerService;
 import com.is1.proyecto.services.EvaluationService;
 import com.is1.proyecto.services.ConditionService;
 import com.is1.proyecto.services.StudentService;
+import com.is1.proyecto.services.SubjectService;
+import com.is1.proyecto.services.StudyPlanService;
 import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,6 +67,8 @@ public class App {
         CareerRepository careerRepository = new CareerRepository();
         EvaluationRepository evaluationRepository = new EvaluationRepository();
         ConditionRepository conditionRepository = new ConditionRepository();
+        SubjectRepository subjectRepository = new SubjectRepository();
+        StudyPlanRepository studyPlanRepository = new StudyPlanRepository();
 
         // --- Instanciación de servicios ---
         // Los servicios se crean una sola vez y se inyectan en las rutas
@@ -72,6 +79,8 @@ public class App {
         CareerService careerService = new CareerService(careerRepository);
         EvaluationService evaluationService = new EvaluationService(evaluationRepository);
         ConditionService conditionService = new ConditionService(conditionRepository);
+        SubjectService subjectService = new SubjectService(subjectRepository);
+        StudyPlanService studyPlanService = new StudyPlanService(studyPlanRepository);
 
         // --- Filtro de seguridad ---
         // Debe registrarse ANTES de las rutas para interceptar todas las requests
@@ -87,6 +96,7 @@ public class App {
         new StudentRoutes(studentService, objectMapper).register();
         new CareerRoutes(careerService).register();
         new EvaluationRoutes(evaluationService).register();
-        new SubjectRoutes(conditionService).register();
+        new StudyPlanRoutes(studyPlanService).register();
+        new SubjectRoutes(subjectService, conditionService).register();
     }
 }

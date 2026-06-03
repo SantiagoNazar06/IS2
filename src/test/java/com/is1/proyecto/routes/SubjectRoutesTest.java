@@ -6,6 +6,7 @@ import com.is1.proyecto.models.ConditionType;
 import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.services.ConditionService;
 import com.is1.proyecto.services.PrerequisiteDTO;
+import com.is1.proyecto.services.SubjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,9 @@ class SubjectRoutesTest {
     private ConditionService conditionService;
 
     @Mock
+    private SubjectService subjectService;
+
+    @Mock
     private Request req;
 
     @Mock
@@ -47,7 +51,7 @@ class SubjectRoutesTest {
 
     @BeforeEach
     void setUp() {
-        subjectRoutes = new SubjectRoutes(conditionService);
+        subjectRoutes = new SubjectRoutes(subjectService, conditionService);
         objectMapper = new ObjectMapper();
     }
 
