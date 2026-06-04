@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import org.javalite.activejdbc.Base;
 
+import com.is1.proyecto.config.DataSeeder;
+
 public final class DBConfigSingleton {
 
     private static DBConfigSingleton instance;
@@ -35,7 +37,7 @@ public final class DBConfigSingleton {
 
     /**
      * Inicializa la base de datos: si las tablas no existen, ejecuta el schema
-     * desde src/main/resources/scheme.sql.
+     * desde src/main/resources/scheme.sql; si ya existen, ejecuta migraciones.
      * <p>
      * Debe llamarse una vez al iniciar la aplicacion, ANTES de cualquier
      * operacion contra la DB.
@@ -43,23 +45,78 @@ public final class DBConfigSingleton {
     public void bootstrap() {
         try (Connection conn = DriverManager.getConnection(getDbUrl())) {
             if (tablesExist(conn)) {
-                System.out.println("[DB] Schema ya inicializado, omitiendo bootstrap.");
-                return;
+                System.out.println("[DB] Schema ya inicializado, ejecutando migraciones...");
+                runMigrations(conn);
+            } else {
+                System.out.println("[DB] Base de datos vacia, ejecutando scheme.sql...");
+                runSqlScript(conn, loadSchemaSql());
+                System.out.println("[DB] Schema ejecutado correctamente.");
             }
-            System.out.println("[DB] Base de datos vacia, ejecutando scheme.sql...");
-            String sql = loadSchemaSql();
-            // SQLite solo ejecuta una sentencia por execute(), partimos por ';'
-            for (String statement : sql.split(";")) {
-                String trimmed = statement.trim();
-                if (!trimmed.isEmpty()) {
-                    try (Statement stmt = conn.createStatement()) {
-                        stmt.execute(trimmed);
+
+            // Sembrar datos iniciales (corre siempre, es idempotente por username)
+            Base.open(this.driver, getDbUrl(), this.user, this.pass);
+            try {
+                DataSeeder.seed();
+            } finally {
+                Base.close();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Fallo al inicializar la base de datos: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Migra el schema existente para agregar columnas y actualizar constraints.
+     */
+    private void runMigrations(Connection conn) {
+        try (Statement stmt = conn.createStatement()) {
+            // Migracion 1: columna teacher_id
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN teacher_id INTEGER REFERENCES teachers(id)");
+                System.out.println("[DB] Migracion: columna teacher_id agregada.");
+            } catch (Exception e) {
+                // Ya existe, ignorar
+            }
+
+            // Migracion 2: CHECK constraint con TEACHER
+            try (ResultSet rs = stmt.executeQuery(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'")) {
+                if (rs.next()) {
+                    String createSql = rs.getString("sql");
+                    if (createSql != null && !createSql.contains("TEACHER")) {
+                        System.out.println("[DB] Migracion: actualizando CHECK constraint...");
+                        stmt.execute("ALTER TABLE users RENAME TO users_old");
+                        stmt.execute("CREATE TABLE users (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "name TEXT NOT NULL UNIQUE," +
+                            "password TEXT NOT NULL," +
+                            "role TEXT NOT NULL DEFAULT 'STUDENT' CHECK(role IN('ADMIN','STUDENT','TEACHER'))," +
+                            "student_id INTEGER REFERENCES students(id)," +
+                            "teacher_id INTEGER REFERENCES teachers(id)" +
+                        ")");
+                        stmt.execute("INSERT INTO users (id, name, password, role, student_id, teacher_id) " +
+                            "SELECT id, name, password, role, student_id, teacher_id FROM users_old");
+                        stmt.execute("DROP TABLE users_old");
+                        System.out.println("[DB] Migracion: CHECK constraint actualizado.");
                     }
                 }
             }
-            System.out.println("[DB] Schema ejecutado correctamente.");
         } catch (Exception e) {
-            throw new RuntimeException("Fallo al inicializar la base de datos: " + e.getMessage(), e);
+            System.err.println("[DB] Migracion fallo (no critico): " + e.getMessage());
+        }
+    }
+
+    /**
+     * Ejecuta un script SQL multilinea (separado por ;).
+     */
+    private void runSqlScript(Connection conn, String sql) throws Exception {
+        for (String statement : sql.split(";")) {
+            String trimmed = statement.trim();
+            if (!trimmed.isEmpty()) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.execute(trimmed);
+                }
+            }
         }
     }
 

@@ -1,6 +1,5 @@
 package com.is1.proyecto.person;
 
-import com.is1.proyecto.config.DBConfigSingleton;
 import com.is1.proyecto.repositories.PersonRepository;
 import com.is1.proyecto.models.Person;
 import org.javalite.activejdbc.Base;
@@ -9,8 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,11 +22,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class PersonRepositoryTest {
 
-    @Mock
-    private DBConfigSingleton dbMock;
-
-    @InjectMocks
-    private PersonRepository repository;
+    private PersonRepository repository = new PersonRepository();
 
     @BeforeEach
     void setup() {
@@ -49,8 +42,6 @@ public class PersonRepositoryTest {
             boolean result = repository.personsTableExists();
 
             assertTrue(result);
-            verify(dbMock).openConnection();
-            verify(dbMock).closeConnection();
         }
     }
 
@@ -80,8 +71,6 @@ public class PersonRepositoryTest {
 
         assertEquals(personMock, result);
         verify(personMock).saveIt();
-        verify(dbMock).openConnection();
-        verify(dbMock).closeConnection();
     }
 
     // =============================

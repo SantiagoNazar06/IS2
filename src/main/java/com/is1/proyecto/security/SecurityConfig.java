@@ -21,11 +21,8 @@ public class SecurityConfig {
         "/login",
         "/logout",
         
-        // Rutas de registro
+        // Rutas de registro (solo creación vía form público)
         "/user/create",
-        "/user/new",
-        "/register_student",
-        "/register_teacher",
         
         // Rutas estáticas (templates)
         "/public/",
@@ -46,6 +43,9 @@ public class SecurityConfig {
         PROTECTED_ROUTES.put("/add_users", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/delete", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/update", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/user/new", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/register_teacher", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/register_student", Set.of(Role.ADMIN));
         
         // Rutas de dashboard - cualquier usuario autenticado
         PROTECTED_ROUTES.put("/dashboard", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
@@ -61,6 +61,20 @@ public class SecurityConfig {
         // Rutas de carreras - cualquier usuario autenticado
         PROTECTED_ROUTES.put("/careers", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
         PROTECTED_ROUTES.put("/career", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
+        
+        // Rutas de materias - ADMIN y TEACHER
+        PROTECTED_ROUTES.put("/subjects", Set.of(Role.ADMIN, Role.TEACHER));
+        PROTECTED_ROUTES.put("/subject", Set.of(Role.ADMIN, Role.TEACHER));
+        
+        // Rutas de planes de estudio - todos los roles
+        PROTECTED_ROUTES.put("/study-plans", Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT));
+        PROTECTED_ROUTES.put("/study-plan", Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT));
+        
+        // Rutas de calificaciones - ADMIN y TEACHER
+        PROTECTED_ROUTES.put("/grades", Set.of(Role.ADMIN, Role.TEACHER));
+        
+        // Rutas de evaluaciones - ADMIN y TEACHER
+        PROTECTED_ROUTES.put("/evaluations", Set.of(Role.ADMIN, Role.TEACHER));
     }
 
     // ==================== CORS CONFIGURATION ====================

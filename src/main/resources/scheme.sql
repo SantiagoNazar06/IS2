@@ -40,9 +40,22 @@ CREATE TABLE students (
 
 DROP TABLE IF EXISTS subjects;
 
+DROP TABLE IF EXISTS study_plans;
+
+CREATE TABLE study_plans (
+    id_study_plan INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    year INTEGER NOT NULL CHECK(year > 0),
+    id_career INTEGER NOT NULL,
+    FOREIGN KEY (id_career) REFERENCES careers(id_careers)
+);
+
 CREATE TABLE subjects (
     id_subject INTEGER PRIMARY KEY AUTOINCREMENT,
-    subject_name TEXT NOT NULL
+    code TEXT NOT NULL UNIQUE,
+    subject_name TEXT NOT NULL,
+    id_study_plan INTEGER,
+    FOREIGN KEY (id_study_plan) REFERENCES study_plans(id_study_plan)
 );
 
 DROP TABLE IF EXISTS careers;
