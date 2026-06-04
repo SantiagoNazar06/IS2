@@ -1,12 +1,41 @@
 package com.is1.proyecto.services;
 
+import com.is1.proyecto.dto.StudentListDTO;
 import com.is1.proyecto.models.Person;
 import com.is1.proyecto.models.Student;
+import com.is1.proyecto.ports.out.StudentRepositoryInterface;
+
+import java.util.List;
 
 /**
  * Servicio para operaciones relacionadas con estudiantes.
  */
 public class StudentService {
+
+    private final StudentRepositoryInterface repository;
+
+    public StudentService() {
+        this.repository = null;
+    }
+
+    public StudentService(StudentRepositoryInterface repository) {
+        this.repository = repository;
+    }
+
+    /**
+     * Obtiene lista de estudiantes con filtros opcionales.
+     * ADMIN ve todos los estudiantes; TEACHER ve solo los de sus materias.
+     *
+     * @param careerId  filtro por carrera (opcional)
+     * @param subjectId filtro por materia (opcional)
+     * @param teacherId ID del profesor (para scoping TEACHER)
+     * @param role      rol del usuario actual
+     * @return lista de StudentListDTO
+     */
+    public List<StudentListDTO> getStudents(Long careerId, Long subjectId, Long teacherId, String role) {
+        boolean isAdmin = "ADMIN".equals(role);
+        return repository.findStudents(careerId, subjectId, teacherId, isAdmin);
+    }
 
     /**
      * Resultado de registro de estudiante.

@@ -68,6 +68,13 @@ class DashboardTemplateTest {
     }
 
     @Test
+    void adminDashboard_excludesProfileLink() throws Exception {
+        String content = loadTemplate("templates/dashboard_admin.mustache");
+        assertFalse(content.contains("/profile"), "Admin dashboard NO debe tener enlace a /profile");
+        assertFalse(content.contains("Tu Perfil"), "Admin dashboard NO debe tener sección Tu Perfil");
+    }
+
+    @Test
     void allDashboards_haveLogout() throws Exception {
         assertTrue(loadTemplate("templates/dashboard_admin.mustache").contains("Cerrar Sesión"));
         assertTrue(loadTemplate("templates/dashboard_teacher.mustache").contains("Cerrar Sesión"));

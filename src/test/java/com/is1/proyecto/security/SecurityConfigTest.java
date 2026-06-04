@@ -96,8 +96,8 @@ class SecurityConfigTest {
         Set<Role> roles = SecurityConfig.getRequiredRoles("/students");
         assertNotNull(roles);
         assertTrue(roles.contains(Role.ADMIN));
-        assertTrue(roles.contains(Role.STUDENT));
-        assertFalse(roles.contains(Role.TEACHER));
+        assertTrue(roles.contains(Role.TEACHER));
+        assertFalse(roles.contains(Role.STUDENT));
     }
 
     @Test
@@ -186,11 +186,26 @@ class SecurityConfigTest {
         // Subpaths deben coincidir con el prefijo
         Set<Role> roles = SecurityConfig.getRequiredRoles("/students/123");
         assertNotNull(roles);
-        assertTrue(roles.contains(Role.STUDENT));
+        assertTrue(roles.contains(Role.TEACHER));
 
         Set<Role> teacherRoles = SecurityConfig.getRequiredRoles("/teachers/profile");
         assertNotNull(teacherRoles);
         assertTrue(teacherRoles.contains(Role.TEACHER));
+
+        // /enrollments subpaths
+        Set<Role> enrollRoles = SecurityConfig.getRequiredRoles("/enrollments/student/123");
+        assertNotNull(enrollRoles);
+        assertTrue(enrollRoles.contains(Role.STUDENT));
+    }
+
+    @Test
+    void getRequiredRoles_profileRequiresStudentAndTeacher() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/profile");
+        assertNotNull(roles);
+        assertEquals(2, roles.size());
+        assertTrue(roles.contains(Role.STUDENT));
+        assertTrue(roles.contains(Role.TEACHER));
+        assertFalse(roles.contains(Role.ADMIN));
     }
 
     // ==================== requiresAuthentication Tests ====================

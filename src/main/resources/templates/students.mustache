@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Estudiantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 min-h-screen">
+    <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Estudiantes</h1>
+            <a href="/dashboard" class="text-blue-600 hover:underline">Volver al Dashboard</a>
+        </div>
+
+        <!-- Filtros -->
+        <form method="get" action="/students" class="mb-6 p-4 bg-gray-50 rounded-lg border flex flex-wrap gap-4 items-end">
+            <div>
+                <label for="careerId" class="block text-sm font-medium text-gray-700 mb-1">Carrera</label>
+                <select name="careerId" id="careerId" class="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Todas las carreras</option>
+                    {{#careers}}
+                    <option value="{{getId}}">{{getCareerName}}</option>
+                    {{/careers}}
+                </select>
+            </div>
+            <div>
+                <label for="subjectId" class="block text-sm font-medium text-gray-700 mb-1">Materia</label>
+                <select name="subjectId" id="subjectId" class="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Todas las materias</option>
+                    {{#subjects}}
+                    <option value="{{subjectId}}">{{subjectName}}</option>
+                    {{/subjects}}
+                </select>
+            </div>
+            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition">
+                Filtrar
+            </button>
+            <a href="/students" class="text-gray-600 hover:text-gray-800 py-2 px-4">Limpiar</a>
+        </form>
+
+        <!-- Tabla de estudiantes -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-700 uppercase text-sm">
+                        <th class="py-3 px-6">Nombre</th>
+                        <th class="py-3 px-6">DNI</th>
+                        <th class="py-3 px-6">Email</th>
+                        <th class="py-3 px-6">Carrera(s)</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm">
+                    {{#students}}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-6 font-medium text-gray-900">{{fullName}}</td>
+                        <td class="py-3 px-6">{{dni}}</td>
+                        <td class="py-3 px-6">{{email}}</td>
+                        <td class="py-3 px-6">{{#careers}}{{careers}}{{/careers}}{{^careers}}Sin carrera{{/careers}}</td>
+                    </tr>
+                    {{/students}}
+                    {{^students}}
+                    <tr>
+                        <td colspan="4" class="py-6 text-center text-gray-400">No se encontraron estudiantes.</td>
+                    </tr>
+                    {{/students}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,8 +1,10 @@
 package com.is1.proyecto.models;
 
 import org.javalite.activejdbc.Model;
+import org.javalite.activejdbc.annotations.BelongsTo;
 import org.javalite.activejdbc.annotations.Table;
 
+@BelongsTo(parent = Person.class, foreignKeyName = "id_persona")
 @Table("teachers")
 public class Teacher extends Model{
 

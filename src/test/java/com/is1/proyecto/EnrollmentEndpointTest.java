@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static spark.Spark.*;
 
 /**
- * Tests de integración HTTP para el endpoint POST /students/:id/enrollments.
+ * Tests de integración HTTP para el endpoint POST /enrollments/student/:id.
  * Usa extracción manual de JSESSIONID para evitar el problema conocido de
  * java.net.CookieManager con cookies de 'localhost' en JVM modernas.
  */
@@ -85,7 +85,7 @@ class EnrollmentEndpointTest {
                 "period", validPeriod
         ));
 
-        HttpResponse<String> res = post(adminCookie, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(adminCookie, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(201, res.statusCode(), "Debe retornar 201 para inscripción válida");
@@ -106,7 +106,7 @@ class EnrollmentEndpointTest {
                 "period", validPeriod
         ));
 
-        HttpResponse<String> res = post(adminCookie, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(adminCookie, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(400, res.statusCode(), "Inscripción duplicada debe retornar 400");
@@ -125,7 +125,7 @@ class EnrollmentEndpointTest {
                 "period", validPeriod
         ));
 
-        HttpResponse<String> res = post(adminCookie, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(adminCookie, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(400, res.statusCode(), "Correlativa faltante debe retornar 400");
@@ -150,7 +150,7 @@ class EnrollmentEndpointTest {
         ));
 
         // studentCookie corresponde a otherStudentId; intenta inscribir a studentId
-        HttpResponse<String> res = post(studentCookie, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(studentCookie, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(403, res.statusCode(), "Un estudiante no puede inscribir a otro: debe retornar 403");
@@ -170,7 +170,7 @@ class EnrollmentEndpointTest {
         ));
 
         // studentCookie tiene student_id = otherStudentId en sesión
-        HttpResponse<String> res = post(studentCookie, "/students/" + otherStudentId + "/enrollments", body);
+        HttpResponse<String> res = post(studentCookie, "/enrollments/student/" + otherStudentId, body);
 
         assertEquals(201, res.statusCode(),
                 "Un estudiante puede inscribirse a sí mismo: debe retornar 201");
@@ -187,7 +187,7 @@ class EnrollmentEndpointTest {
                 "period", "2024/1"
         ));
 
-        HttpResponse<String> res = post(adminCookie, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(adminCookie, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(400, res.statusCode(), "Período con formato inválido debe retornar 400");
@@ -206,7 +206,7 @@ class EnrollmentEndpointTest {
                 "period", "2020-1"
         ));
 
-        HttpResponse<String> res = post(adminCookie, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(adminCookie, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(400, res.statusCode(), "Período pasado debe retornar 400");
@@ -226,7 +226,7 @@ class EnrollmentEndpointTest {
         ));
 
         // Petición sin cookie de sesión
-        HttpResponse<String> res = post(null, "/students/" + studentId + "/enrollments", body);
+        HttpResponse<String> res = post(null, "/enrollments/student/" + studentId, body);
         Map<?, ?> json = mapper.readValue(res.body(), Map.class);
 
         assertEquals(401, res.statusCode(), "Sin sesión debe retornar 401");

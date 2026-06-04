@@ -2,12 +2,7 @@ package com.is1.proyecto; // Define el paquete de la aplicación, debe coincidir
 
 import com.is1.proyecto.config.DBConfigSingleton; // Clase Singleton para la configuración de la base de datos.
 import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la base de datos.
-import com.is1.proyecto.repositories.CareerRepository;
-import com.is1.proyecto.repositories.EvaluationRepository;
-import com.is1.proyecto.repositories.ConditionRepository;
-import com.is1.proyecto.repositories.TeacherRepository;
-import com.is1.proyecto.repositories.SubjectRepository;
-import com.is1.proyecto.repositories.StudyPlanRepository;
+import com.is1.proyecto.repositories.*;
 import com.is1.proyecto.routes.CareerRoutes;
 import com.is1.proyecto.routes.EvaluationRoutes;
 import com.is1.proyecto.routes.StudentRoutes;
@@ -68,6 +63,8 @@ public class App {
         CareerRepository careerRepository = new CareerRepository();
         EvaluationRepository evaluationRepository = new EvaluationRepository();
         ConditionRepository conditionRepository = new ConditionRepository();
+        PersonRepository personRepository = new PersonRepository();
+        StudentRepository studentRepository = new StudentRepository();
         SubjectRepository subjectRepository = new SubjectRepository();
         StudyPlanRepository studyPlanRepository = new StudyPlanRepository();
 
@@ -77,7 +74,7 @@ public class App {
         UserService userService = new UserService(authService);
         TeacherRepository teacherRepository = new TeacherRepository();
         TeacherService teacherService = new TeacherService(teacherRepository);
-        StudentService studentService = new StudentService();
+        StudentService studentService = new StudentService(studentRepository);
         CareerService careerService = new CareerService(careerRepository);
         EvaluationService evaluationService = new EvaluationService(evaluationRepository);
         ConditionService conditionService = new ConditionService(conditionRepository);
@@ -86,16 +83,16 @@ public class App {
 
         // --- Filtro de seguridad ---
         // Debe registrarse ANTES de las rutas para interceptar todas las requests
-        // El SecurityFilter valida autenticación, roles y aplica CORS
+        // El SecurityFilter valida autenticación y roles
         SecurityFilter.setAuthService(authService);
         SecurityFilter.register();
 
         // --- Registro de rutas ---
         // Cada grupo de rutas se registra con sus servicios correspondientes
-        new UserRoutes(authService, userService).register();
+        new UserRoutes(authService, userService, personRepository).register();
         new TeacherRoutes(teacherService).register();
         ObjectMapper objectMapper = new ObjectMapper();
-        new StudentRoutes(studentService, objectMapper).register();
+        new StudentRoutes(studentService, careerService, subjectService, objectMapper).register();
         new CareerRoutes(careerService).register();
         new EvaluationRoutes(evaluationService).register();
         new StudyPlanRoutes(studyPlanService).register();

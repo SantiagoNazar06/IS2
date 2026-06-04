@@ -115,3 +115,11 @@ CREATE TABLE teacher_assignments (
     period TEXT NOT NULL,
     UNIQUE(teacher_id, subject_id, period)
 );
+
+DROP TABLE IF EXISTS teacher_subject;
+
+CREATE TABLE teacher_subject (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL REFERENCES teachers(id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject)
+);

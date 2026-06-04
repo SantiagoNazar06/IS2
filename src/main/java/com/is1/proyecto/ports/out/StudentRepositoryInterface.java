@@ -2,6 +2,7 @@ package com.is1.proyecto.ports.out;
 
 import com.is1.proyecto.dto.EnrollmentDTO;
 import com.is1.proyecto.dto.GradeDTO;
+import com.is1.proyecto.dto.StudentListDTO;
 import com.is1.proyecto.dto.SubjectDTO;
 import com.is1.proyecto.models.Student;
 
@@ -20,4 +21,6 @@ public interface StudentRepositoryInterface {
     List<EnrollmentDTO> getCurrentEnrollments(Long studentId);
 
     List<GradeDTO> getGrades(Long studentId);
+
+    List<StudentListDTO> findStudents(Long careerId, Long subjectId, Long teacherId, boolean isAdmin);
 }

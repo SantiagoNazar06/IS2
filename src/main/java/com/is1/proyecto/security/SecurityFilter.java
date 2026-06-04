@@ -18,8 +18,6 @@ import javax.servlet.http.HttpServletResponse;
  * Responsabilidades:
  * 1. Validar autenticación en rutas protegidas
  * 2. Verificar roles de usuario
- * 3. Aplicar headers CORS
- * 4. Manejar preflight OPTIONS
  */
 public class SecurityFilter {
 
@@ -41,22 +39,13 @@ public class SecurityFilter {
     public static Filter createBeforeFilter() {
         return (Request req, Response res) -> {
             String path = req.pathInfo();
-            String method = req.requestMethod();
             
-            // 1. Aplicar headers CORS a TODAS las respuestas
-            applyCorsHeaders(res);
-            
-            // 2. Manejar preflight OPTIONS
-            if ("OPTIONS".equalsIgnoreCase(method)) {
-                return;
-            }
-            
-            // 3. Verificar si la ruta es pública
+            // 1. Verificar si la ruta es pública
             if (SecurityConfig.isPublicRoute(path)) {
                 return;
             }
             
-            // 4. Verificar si hay sesión activa
+            // 2. Verificar si hay sesión activa
             boolean isAuth = authService != null && authService.isAuthenticated(req);
             
             if (!isAuth) {
@@ -75,7 +64,7 @@ public class SecurityFilter {
                 return;
             }
             
-            // 5. Verificar rol si la ruta lo requiere
+            // 3. Verificar rol si la ruta lo requiere
             Set<Role> requiredRoles = SecurityConfig.getRequiredRoles(path);
             if (requiredRoles != null && !requiredRoles.isEmpty()) {
                 Role userRole = authService.getCurrentUserRole(req);
@@ -97,17 +86,6 @@ public class SecurityFilter {
         };
     }
 
-    /**
-     * Aplica headers CORS a la respuesta.
-     */
-    private static void applyCorsHeaders(Response res) {
-        res.header("Access-Control-Allow-Origin", SecurityConfig.CORS_ALLOWED_ORIGINS);
-        res.header("Access-Control-Allow-Methods", SecurityConfig.CORS_ALLOWED_METHODS);
-        res.header("Access-Control-Allow-Headers", SecurityConfig.CORS_ALLOWED_HEADERS);
-        res.header("Access-Control-Expose-Headers", SecurityConfig.CORS_EXPOSED_HEADERS);
-        res.header("Access-Control-Max-Age", SecurityConfig.CORS_MAX_AGE);
-        res.header("Access-Control-Allow-Credentials", "true");
-    }
 
     /**
      * Registra el filtro en Spark.
