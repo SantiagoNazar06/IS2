@@ -5,6 +5,7 @@ import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la 
 import com.is1.proyecto.repositories.CareerRepository;
 import com.is1.proyecto.repositories.EvaluationRepository;
 import com.is1.proyecto.repositories.ConditionRepository;
+import com.is1.proyecto.repositories.StudentRepository;
 import com.is1.proyecto.repositories.SubjectRepository;
 import com.is1.proyecto.repositories.StudyPlanRepository;
 import com.is1.proyecto.routes.CareerRoutes;
@@ -67,6 +68,7 @@ public class App {
         CareerRepository careerRepository = new CareerRepository();
         EvaluationRepository evaluationRepository = new EvaluationRepository();
         ConditionRepository conditionRepository = new ConditionRepository();
+        StudentRepository studentRepository = new StudentRepository();
         SubjectRepository subjectRepository = new SubjectRepository();
         StudyPlanRepository studyPlanRepository = new StudyPlanRepository();
 
@@ -75,7 +77,7 @@ public class App {
         AuthService authService = new AuthService();
         UserService userService = new UserService(authService);
         TeacherService teacherService = new TeacherService();
-        StudentService studentService = new StudentService();
+        StudentService studentService = new StudentService(studentRepository);
         CareerService careerService = new CareerService(careerRepository);
         EvaluationService evaluationService = new EvaluationService(evaluationRepository);
         ConditionService conditionService = new ConditionService(conditionRepository);
@@ -93,7 +95,7 @@ public class App {
         new UserRoutes(authService, userService).register();
         new TeacherRoutes(teacherService).register();
         ObjectMapper objectMapper = new ObjectMapper();
-        new StudentRoutes(studentService, objectMapper).register();
+        new StudentRoutes(studentService, careerService, subjectService, objectMapper).register();
         new CareerRoutes(careerService).register();
         new EvaluationRoutes(evaluationService).register();
         new StudyPlanRoutes(studyPlanService).register();

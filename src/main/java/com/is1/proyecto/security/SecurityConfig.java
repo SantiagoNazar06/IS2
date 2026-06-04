@@ -50,9 +50,12 @@ public class SecurityConfig {
         // Rutas de dashboard - cualquier usuario autenticado
         PROTECTED_ROUTES.put("/dashboard", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
         
-        // Rutas de estudiantes - STUDENT o ADMIN
-        PROTECTED_ROUTES.put("/students", Set.of(Role.ADMIN, Role.STUDENT));
+        // Rutas de estudiantes - ADMIN o TEACHER (listado)
+        PROTECTED_ROUTES.put("/students", Set.of(Role.ADMIN, Role.TEACHER));
         PROTECTED_ROUTES.put("/student", Set.of(Role.ADMIN, Role.STUDENT));
+
+        // Rutas de inscripciones - ADMIN o STUDENT
+        PROTECTED_ROUTES.put("/enrollments", Set.of(Role.ADMIN, Role.STUDENT));
         
         // Rutas de profesores - TEACHER o ADMIN
         PROTECTED_ROUTES.put("/teachers", Set.of(Role.ADMIN, Role.TEACHER));

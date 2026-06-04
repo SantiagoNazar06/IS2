@@ -1,12 +1,15 @@
 package com.is1.proyecto.routes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.is1.proyecto.dto.StudentListDTO;
 import com.is1.proyecto.models.Enrollment;
 import com.is1.proyecto.models.Student;
 import com.is1.proyecto.models.Subject;
+import com.is1.proyecto.services.CareerService;
 import com.is1.proyecto.services.CorrelationEngine;
 import com.is1.proyecto.services.PeriodValidator;
 import com.is1.proyecto.services.StudentService;
+import com.is1.proyecto.services.SubjectService;
 import com.is1.proyecto.services.ValidationResult;
 import spark.ModelAndView;
 import spark.Request;
@@ -14,6 +17,7 @@ import spark.Response;
 import spark.template.mustache.MustacheTemplateEngine;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.*;
@@ -21,11 +25,16 @@ import static spark.Spark.*;
 public class StudentRoutes {
 
     private final StudentService studentService;
+    private final CareerService careerService;
+    private final SubjectService subjectService;
     private final ObjectMapper objectMapper;
     private final MustacheTemplateEngine templateEngine;
 
-    public StudentRoutes(StudentService studentService, ObjectMapper objectMapper) {
+    public StudentRoutes(StudentService studentService, CareerService careerService,
+                         SubjectService subjectService, ObjectMapper objectMapper) {
         this.studentService = studentService;
+        this.careerService = careerService;
+        this.subjectService = subjectService;
         this.objectMapper = objectMapper;
         this.templateEngine = new MustacheTemplateEngine();
     }
@@ -33,7 +42,8 @@ public class StudentRoutes {
     public void register() {
         get("/register_student", this::showStudentForm, templateEngine);
         post("/register_student", this::handleRegisterStudent);
-        post("/students/:id/enrollments", this::handleEnroll);
+        get("/students", this::showStudents, templateEngine);
+        post("/enrollments/student/:id", this::handleEnroll);
     }
 
     private ModelAndView showStudentForm(Request req, Response res) {
@@ -66,6 +76,37 @@ public class StudentRoutes {
         res.status(result.statusCode);
         res.redirect(result.redirectUrl);
         return "";
+    }
+
+    // GET /students — listado de estudiantes con filtros
+    private ModelAndView showStudents(Request req, Response res) {
+        Map<String, Object> model = new HashMap<>();
+
+        // Leer filtros de query params
+        String careerIdParam = req.queryParams("careerId");
+        String subjectIdParam = req.queryParams("subjectId");
+        Long careerId = careerIdParam != null && !careerIdParam.isEmpty() ? Long.parseLong(careerIdParam) : null;
+        Long subjectId = subjectIdParam != null && !subjectIdParam.isEmpty() ? Long.parseLong(subjectIdParam) : null;
+
+        // Leer rol y teacherId de la sesión
+        String role = req.session().attribute("userRole");
+        Long teacherId = "TEACHER".equals(role)
+                ? req.session().attribute("teacherId")
+                : null;
+
+        // Obtener estudiantes
+        List<StudentListDTO> students = studentService.getStudents(careerId, subjectId, teacherId, role);
+
+        // Dropdowns para filtros
+        model.put("students", students);
+        model.put("careers", careerService.getAllCareers());
+        model.put("subjects", subjectService.getAllSubjects(null));
+
+        // Mantener filtros seleccionados en el formulario
+        model.put("selectedCareerId", careerId);
+        model.put("selectedSubjectId", subjectId);
+
+        return new ModelAndView(model, "students.mustache");
     }
 
     // AC-1: POST /students/:id/enrollments

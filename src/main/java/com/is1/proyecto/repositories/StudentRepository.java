@@ -2,6 +2,7 @@ package com.is1.proyecto.repositories;
 
 import com.is1.proyecto.dto.EnrollmentDTO;
 import com.is1.proyecto.dto.GradeDTO;
+import com.is1.proyecto.dto.StudentListDTO;
 import com.is1.proyecto.dto.SubjectDTO;
 import com.is1.proyecto.models.Enrollment;
 import com.is1.proyecto.models.Person;
@@ -129,6 +130,63 @@ public class StudentRepository implements StudentRepositoryInterface {
             String evaluationDate = row.get("evaluation_date") != null
                     ? row.get("evaluation_date").toString() : null;
             result.add(new GradeDTO(subjectName, grade, evaluationDate));
+        }
+        return result;
+    }
+
+    // ========================================================================
+    // findStudents — 5-table JOIN with GROUP_CONCAT and dynamic filters
+    // ========================================================================
+    @Override
+    public List<StudentListDTO> findStudents(Long careerId, Long subjectId, Long teacherId, boolean isAdmin) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT s.id AS student_id, ")
+                .append("p.firstName || ' ' || p.lastName AS full_name, ")
+                .append("p.dni, p.email, ")
+                .append("GROUP_CONCAT(DISTINCT c.career_name) AS careers ")
+                .append("FROM students s ")
+                .append("JOIN persons p ON s.id_person = p.id ")
+                .append("LEFT JOIN enrollments e ON e.student_id = s.id ")
+                .append("LEFT JOIN subjects sub ON e.subject_id = sub.id_subject ")
+                .append("LEFT JOIN study_plans sp ON sub.id_study_plan = sp.id_study_plan ")
+                .append("LEFT JOIN careers c ON sp.id_career = c.id_careers ");
+
+        List<Object> params = new ArrayList<>();
+        List<String> conditions = new ArrayList<>();
+
+        if (!isAdmin && teacherId != null) {
+            sql.append("JOIN teacher_subject ts ON ts.subject_id = sub.id_subject AND ts.teacher_id = ? ");
+            params.add(teacherId);
+        }
+
+        if (careerId != null) {
+            conditions.add("c.id_careers = ?");
+            params.add(careerId);
+        }
+
+        if (subjectId != null) {
+            conditions.add("sub.id_subject = ?");
+            params.add(subjectId);
+        }
+
+        if (!isAdmin && teacherId != null) {
+            conditions.add("ts.teacher_id = ?");
+            params.add(teacherId);
+        }
+
+        if (!conditions.isEmpty()) {
+            sql.append("WHERE ");
+            sql.append(String.join(" AND ", conditions));
+            sql.append(" ");
+        }
+
+        sql.append("GROUP BY s.id, p.firstName, p.lastName, p.dni, p.email ");
+        sql.append("ORDER BY p.lastName, p.firstName");
+
+        List<Map> rows = Base.findAll(sql.toString(), params.toArray());
+        List<StudentListDTO> result = new ArrayList<>();
+        for (Map row : rows) {
+            result.add(new StudentListDTO(row));
         }
         return result;
     }

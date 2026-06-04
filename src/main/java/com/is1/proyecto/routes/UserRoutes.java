@@ -166,6 +166,12 @@ public class UserRoutes {
                     req.session().attribute("studentId", studentId);
                 }
             }
+            if ("TEACHER".equals(loginResult.user.getRole())) {
+                Long teacherId = loginResult.user.getTeacherId();
+                if (teacherId != null && teacherId != 0) {
+                    req.session().attribute("teacherId", teacherId);
+                }
+            }
             model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
             // Renderiza el dashboard según el rol del usuario.
             String template = dashboardTemplateForRole(loginResult.user.getRole());
