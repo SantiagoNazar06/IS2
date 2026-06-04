@@ -101,6 +101,37 @@ public final class DBConfigSingleton {
                     }
                 }
             }
+            // Migracion 3: tabla study_plans (agregada en schema actualizado)
+            try {
+                stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS study_plans (" +
+                    "id_study_plan INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "name TEXT NOT NULL, " +
+                    "year INTEGER NOT NULL CHECK(year > 0), " +
+                    "id_career INTEGER NOT NULL, " +
+                    "FOREIGN KEY (id_career) REFERENCES careers(id_careers)" +
+                    ")"
+                );
+                System.out.println("[DB] Migracion: tabla study_plans creada.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion study_plans fallo: " + e.getMessage());
+            }
+
+            // Migracion 4: columna code en subjects
+            try {
+                stmt.execute("ALTER TABLE subjects ADD COLUMN code TEXT");
+                System.out.println("[DB] Migracion: columna code agregada a subjects.");
+            } catch (Exception e) {
+                // Ya existe, ignorar
+            }
+
+            // Migracion 5: columna id_study_plan en subjects
+            try {
+                stmt.execute("ALTER TABLE subjects ADD COLUMN id_study_plan INTEGER REFERENCES study_plans(id_study_plan)");
+                System.out.println("[DB] Migracion: columna id_study_plan agregada a subjects.");
+            } catch (Exception e) {
+                // Ya existe, ignorar
+            }
         } catch (Exception e) {
             System.err.println("[DB] Migracion fallo (no critico): " + e.getMessage());
         }

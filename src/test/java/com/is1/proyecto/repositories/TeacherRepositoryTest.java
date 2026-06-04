@@ -2,9 +2,7 @@ package com.is1.proyecto.repositories;
 
 import com.is1.proyecto.models.Teacher;
 import org.javalite.activejdbc.Base;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.File;
@@ -36,9 +34,18 @@ class TeacherRepositoryTest {
         Base.close();
     }
 
+    @BeforeEach
+    void openConnection() {
+        Base.open("org.sqlite.JDBC", DB_URL, "", "");
+    }
+
+    @AfterEach
+    void closeConnection() {
+        Base.close();
+    }
+
     @AfterAll
     void tearDown() {
-        Base.close();
         new File("./target/teacher-repo-test.db").delete();
     }
 

@@ -42,8 +42,8 @@ class PersonServiceIT {
         Base.exec("CREATE TABLE IF NOT EXISTS persons (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "dni TEXT, " +
-            "firstname TEXT, " +
-            "lastname TEXT, " +
+            "firstName TEXT, " +
+            "lastName TEXT, " +
             "phone TEXT, " +
             "email TEXT" +
             ")");

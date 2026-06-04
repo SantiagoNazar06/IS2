@@ -29,10 +29,26 @@ public class PersonRepositoryIntegrationTest {
             "CREATE TABLE IF NOT EXISTS persons (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "dni TEXT, " +
-            "firstname TEXT, " +
-            "lastname TEXT, " +
+            "firstName TEXT, " +
+            "lastName TEXT, " +
             "phone TEXT, " +
             "email TEXT" +
+            ")"
+        );
+        Base.exec(
+            "CREATE TABLE IF NOT EXISTS students (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "id_person INTEGER NOT NULL, " +
+            "student_type TEXT NOT NULL, " +
+            "FOREIGN KEY (id_person) REFERENCES persons(id)" +
+            ")"
+        );
+        Base.exec(
+            "CREATE TABLE IF NOT EXISTS teachers (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "id_persona INTEGER NOT NULL, " +
+            "nroLegajo VARCHAR(30) NOT NULL UNIQUE, " +
+            "FOREIGN KEY (id_persona) REFERENCES persons(id)" +
             ")"
         );
         Base.close();
@@ -62,8 +78,8 @@ public class PersonRepositoryIntegrationTest {
     @Test
     void testCRUDCycle() {
         Person person = new Person();
-        person.set("firstname", "Juan");
-        person.set("lastname", "Perez");
+        person.set("firstName", "Juan");
+        person.set("lastName", "Perez");
         person.set("dni", "123");
 
         Person created = repository.create(person);
@@ -71,16 +87,16 @@ public class PersonRepositoryIntegrationTest {
 
         Person found = repository.findById(created.getLongId());
         assertNotNull(found);
-        assertEquals("Juan", found.getString("firstname"));
-        assertEquals("Perez", found.getString("lastname"));
+        assertEquals("Juan", found.getString("firstName"));
+        assertEquals("Perez", found.getString("lastName"));
 
         Map<String, Object> updateData = new HashMap<>();
-        updateData.put("firstname", "Carlos");
+        updateData.put("firstName", "Carlos");
         boolean updated = repository.update(created.getLongId(), updateData);
         assertTrue(updated);
 
         Person updatedPerson = repository.findById(created.getLongId());
-        assertEquals("Carlos", updatedPerson.getString("firstname"));
+        assertEquals("Carlos", updatedPerson.getString("firstName"));
 
         List<Person> all = repository.findAll();
         assertEquals(1, all.size());
