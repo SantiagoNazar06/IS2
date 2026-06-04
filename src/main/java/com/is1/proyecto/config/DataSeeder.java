@@ -1,8 +1,8 @@
 package com.is1.proyecto.config;
 
 import com.is1.proyecto.models.*;
+import com.is1.proyecto.security.PasswordEncoder;
 import org.javalite.activejdbc.Base;
-import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * Puebla la base de datos con datos iniciales si está vacía.
@@ -10,6 +10,8 @@ import org.mindrot.jbcrypt.BCrypt;
  * Idempotente: solo ejecuta si la tabla {@code users} está vacía.
  */
 public class DataSeeder {
+
+    private static final PasswordEncoder PASSWORD_ENCODER = new PasswordEncoder();
 
     private DataSeeder() {
         // Utility class
@@ -62,7 +64,7 @@ public class DataSeeder {
 
         User adminUser = new User();
         adminUser.setName("admin");
-        adminUser.set("password", BCrypt.hashpw("admin123", BCrypt.gensalt()));
+        adminUser.set("password", PASSWORD_ENCODER.encode("admin123"));
         adminUser.set("role", "ADMIN");
         adminUser.saveIt();
     }
@@ -83,7 +85,7 @@ public class DataSeeder {
 
         User teacherUser = new User();
         teacherUser.setName("teacher");
-        teacherUser.set("password", BCrypt.hashpw("teacher123", BCrypt.gensalt()));
+        teacherUser.set("password", PASSWORD_ENCODER.encode("teacher123"));
         teacherUser.set("role", "TEACHER");
         teacherUser.setTeacherId(teacherRecord.getLongId());
         teacherUser.saveIt();
@@ -105,7 +107,7 @@ public class DataSeeder {
 
         User studentUser = new User();
         studentUser.setName("student");
-        studentUser.set("password", BCrypt.hashpw("student123", BCrypt.gensalt()));
+        studentUser.set("password", PASSWORD_ENCODER.encode("student123"));
         studentUser.set("role", "STUDENT");
         studentUser.setStudentId(studentRecord.getLongId());
         studentUser.saveIt();

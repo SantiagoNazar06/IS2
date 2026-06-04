@@ -3,11 +3,13 @@ package com.is1.proyecto.repositories;
 import java.util.List;
 import java.util.Map;
 
-import org.mindrot.jbcrypt.BCrypt;
-
 import com.is1.proyecto.models.User;
+import com.is1.proyecto.security.PasswordEncoder;
 
 public class UserRepository {
+
+    /** Encoder centralizado para hasheo de contraseñas. */
+    private final PasswordEncoder passwordEncoder = new PasswordEncoder();
 
     /**
      * Busca un usuario por su nombre de usuario.
@@ -64,9 +66,9 @@ public class UserRepository {
     }
 
     /**
-     * Helper para generar el hash de la contraseña.
+     * Hashea la contraseña delegando en {@link PasswordEncoder#encode(String)}.
      */
     private String hashPassword(String plain) {
-        return BCrypt.hashpw(plain, BCrypt.gensalt());  
+        return passwordEncoder.encode(plain);
     }
 }
