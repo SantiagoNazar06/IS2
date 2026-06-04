@@ -1,6 +1,7 @@
 package com.is1.proyecto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.is1.proyecto.security.PasswordEncoder;
 import org.javalite.activejdbc.Base;
 import org.junit.jupiter.api.*;
 
@@ -30,6 +31,7 @@ class EnrollmentEndpointTest {
     private static final String BASE_URL     = "http://localhost:" + TEST_PORT;
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final PasswordEncoder encoder = new PasswordEncoder();
 
     // IDs insertados en setUp
     private long studentId;
@@ -294,8 +296,8 @@ class EnrollmentEndpointTest {
     }
 
     private void insertTestData() {
-        String adminHash   = org.mindrot.jbcrypt.BCrypt.hashpw("pass123", org.mindrot.jbcrypt.BCrypt.gensalt());
-        String studentHash = org.mindrot.jbcrypt.BCrypt.hashpw("pass456", org.mindrot.jbcrypt.BCrypt.gensalt());
+        String adminHash   = encoder.encode("pass123");
+        String studentHash = encoder.encode("pass456");
 
         Base.exec("INSERT INTO persons (dni, firstName, lastName, phone, email) VALUES (?,?,?,?,?)",
                 "11111111", "Maria", "Lopez", "1234567890", "maria@test.com");

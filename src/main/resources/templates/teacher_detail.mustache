@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil del Docente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Datos personales -->
+        <div class="bg-white p-8 rounded-lg shadow-lg mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Perfil del Docente</h1>
+            {{#teacher}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+                <div><span class="font-semibold">Legajo:</span> {{legajo}}</div>
+                <div><span class="font-semibold">DNI:</span> {{dni}}</div>
+                <div><span class="font-semibold">Nombre:</span> {{firstName}} {{lastName}}</div>
+                <div><span class="font-semibold">Email:</span> {{email}}</div>
+                <div><span class="font-semibold">Teléfono:</span> {{phone}}</div>
+            </div>
+            {{/teacher}}
+        </div>
+
+        <!-- Materias asignadas -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Materias Asignadas</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700 uppercase text-sm">
+                            <th class="py-3 px-6">Materia</th>
+                            <th class="py-3 px-6">Rol</th>
+                            <th class="py-3 px-6">Período</th>
+                            <th class="py-3 px-6 text-center">Alumnos evaluados</th>
+                            <th class="py-3 px-6 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm">
+                        {{#subjects}}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 px-6 font-medium text-gray-900">{{subjectName}}</td>
+                            <td class="py-3 px-6">{{role}}</td>
+                            <td class="py-3 px-6">{{period}}</td>
+                            <td class="py-3 px-6 text-center">{{studentCount}}</td>
+                            <td class="py-3 px-6 text-center">
+                                <a href="/teachers/{{teacherId}}/subjects/{{subjectId}}/students"
+                                   class="text-blue-600 hover:text-blue-800 font-semibold">Ver alumnos</a>
+                            </td>
+                        </tr>
+                        {{/subjects}}
+                        {{^subjects}}
+                        <tr>
+                            <td colspan="5" class="py-6 text-center text-gray-400">No tiene materias asignadas.</td>
+                        </tr>
+                        {{/subjects}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="/teachers" class="text-blue-600 hover:underline">Volver al listado</a>
+        </div>
+    </div>
+</body>
+</html>

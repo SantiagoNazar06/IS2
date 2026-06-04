@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Materias del Docente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 min-h-screen">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        {{#teacher}}
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Materias asignadas</h1>
+        <p class="text-gray-500 mb-6">{{firstName}} {{lastName}} — Legajo {{legajo}}</p>
+        {{/teacher}}
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-700 uppercase text-sm">
+                        <th class="py-3 px-6">Materia</th>
+                        <th class="py-3 px-6">Rol</th>
+                        <th class="py-3 px-6">Período</th>
+                        <th class="py-3 px-6 text-center">Alumnos evaluados</th>
+                        <th class="py-3 px-6 text-center">Alumnos</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm">
+                    {{#subjects}}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-6 font-medium text-gray-900">{{subjectName}}</td>
+                        <td class="py-3 px-6">{{role}}</td>
+                        <td class="py-3 px-6">{{period}}</td>
+                        <td class="py-3 px-6 text-center">{{studentCount}}</td>
+                        <td class="py-3 px-6 text-center">
+                            <a href="/teachers/{{teacherId}}/subjects/{{subjectId}}/students"
+                               class="text-blue-600 hover:text-blue-800 font-semibold">Ver</a>
+                        </td>
+                    </tr>
+                    {{/subjects}}
+                    {{^subjects}}
+                    <tr>
+                        <td colspan="5" class="py-6 text-center text-gray-400">No tiene materias asignadas.</td>
+                    </tr>
+                    {{/subjects}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 flex gap-4 justify-center">
+            <a href="/teachers/{{teacherId}}" class="text-blue-600 hover:underline">Ver perfil completo</a>
+            <span class="text-gray-300">|</span>
+            <a href="/teachers" class="text-blue-600 hover:underline">Volver al listado</a>
+        </div>
+    </div>
+</body>
+</html>

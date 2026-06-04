@@ -49,6 +49,14 @@ public class User extends Model {
         set("role", role);
     }
 
+    public Long getTeacherId() {
+        return getLong("teacher_id");
+    }
+
+    public void setTeacherId(Long teacherId) {
+        set("teacher_id", teacherId);
+    }
+
     public Long getStudentId() {
         return getLong("student_id");
     }
@@ -56,23 +64,4 @@ public class User extends Model {
     public void setStudentId(Long studentId) {
         set("student_id", studentId);
     }
-
-    /**
-     * Obtiene el ID del profesor asociado, o null si no es un TEACHER.
-     *
-     * @return ID del profesor o null
-     */
-    public Long getTeacherId() {
-        return getLong("teacher_id");
-    }
-
-    /**
-     * Establece el ID del profesor asociado.
-     *
-     * @param teacherId ID del profesor
-     */
-    public void setTeacherId(Long teacherId) {
-        set("teacher_id", teacherId);
-    }
-
 }

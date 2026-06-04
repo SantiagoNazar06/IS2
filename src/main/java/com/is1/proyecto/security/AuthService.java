@@ -1,7 +1,7 @@
 package com.is1.proyecto.security;
 
 import com.is1.proyecto.models.User;
-import org.mindrot.jbcrypt.BCrypt;
+
 import spark.Request;
 import spark.Session;
 
@@ -10,6 +10,13 @@ import spark.Session;
  * Maneja login, logout y verificación de estado de autenticación.
  */
 public class AuthService {
+
+    /** Encoder centralizado para hasheo y verificación de contraseñas. */
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthService(){
+        this.passwordEncoder = new PasswordEncoder();
+    }
 
     /**
      * Resultado de una operación de login.
@@ -58,8 +65,8 @@ public class AuthService {
         String storedHashedPassword = user.getString("password");
 
         // Compara la contraseña en texto plano ingresada con la contraseña hasheada almacenada.
-        // BCrypt.checkpw hashea la plainTextPassword con el salt de storedHashedPassword y compara.
-        if (BCrypt.checkpw(plainTextPassword, storedHashedPassword)) {
+        // PasswordEncoder.verify delega en BCrypt.checkpw internamente.
+        if (passwordEncoder.verify(plainTextPassword, storedHashedPassword)) {
             // Autenticación exitosa.
             return LoginResult.success(user);
         } else {
@@ -161,12 +168,12 @@ public class AuthService {
     }
 
     /**
-     * Hashea una contraseña usando BCrypt.
-     * 
+     * Hashea una contraseña delegando en {@link PasswordEncoder#encode(String)}.
+     *
      * @param plainTextPassword Contraseña en texto plano
      * @return Contraseña hasheada
      */
     public String hashPassword(String plainTextPassword) {
-        return BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
+        return passwordEncoder.encode(plainTextPassword);
     }
 }
