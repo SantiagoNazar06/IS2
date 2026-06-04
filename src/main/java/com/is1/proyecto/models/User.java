@@ -49,6 +49,14 @@ public class User extends Model {
         set("role", role);
     }
 
+    public Long getTeacherId() {
+        return getLong("teacher_id");
+    }
+
+    public void setTeacherId(Long teacherId) {
+        set("teacher_id", teacherId);
+    }
+
     public Long getStudentId() {
         return getLong("student_id");
     }

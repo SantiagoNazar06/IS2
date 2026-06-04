@@ -66,16 +66,6 @@ CREATE TABLE careers (
     career_duration INTEGER NOT NULL CHECK(career_duration > 0)
 );
 
-DROP TABLE IF EXISTS teacher_subject;
-
-CREATE TABLE teacher_subject (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    teacher_id INTEGER NOT NULL,
-    subject_id INTEGER NOT NULL,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject)
-);
-
 DROP TABLE IF EXISTS enrollments;
 
 CREATE TABLE enrollments (
@@ -90,14 +80,19 @@ CREATE TABLE enrollments (
     UNIQUE(student_id, subject_id, period)
 );
 
+DROP TABLE IF EXISTS evaluations;
+
 CREATE TABLE evaluations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    enrollment_id INTEGER NOT NULL UNIQUE,
-    grade DECIMAL(4,2) NOT NULL,
-    evaluation_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id),
-    CHECK(grade >= 0 AND grade <= 10)
+    id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    subject_id INTEGER NOT NULL,
+    evaluation_date DATE NOT NULL,
+    evaluation_note INTEGER,
+    condition_type TEXT CHECK(condition_type IN('aprobado', 'regular', 'desaprobado')),
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject)
 );
+
 
 DROP TABLE IF EXISTS conditions;
 
@@ -108,4 +103,15 @@ CREATE TABLE conditions (
     type VARCHAR(20) NOT NULL DEFAULT 'REGULAR',
     CHECK(type IN ('REGULAR', 'APROBADA')),
     CHECK(subject_id != prerequisite_subject_id)
+);
+
+DROP TABLE IF EXISTS teacher_assignments;
+
+CREATE TABLE teacher_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL REFERENCES teachers(id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    role VARCHAR(30) NOT NULL DEFAULT 'RESPONSABLE' CHECK(role IN('RESPONSABLE', 'JTP', 'AYUDANTE')),
+    period TEXT NOT NULL,
+    UNIQUE(teacher_id, subject_id, period)
 );

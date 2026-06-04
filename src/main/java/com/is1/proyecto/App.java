@@ -5,6 +5,7 @@ import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la 
 import com.is1.proyecto.repositories.CareerRepository;
 import com.is1.proyecto.repositories.EvaluationRepository;
 import com.is1.proyecto.repositories.ConditionRepository;
+import com.is1.proyecto.repositories.TeacherRepository;
 import com.is1.proyecto.repositories.SubjectRepository;
 import com.is1.proyecto.repositories.StudyPlanRepository;
 import com.is1.proyecto.routes.CareerRoutes;
@@ -74,7 +75,8 @@ public class App {
         // Los servicios se crean una sola vez y se inyectan en las rutas
         AuthService authService = new AuthService();
         UserService userService = new UserService(authService);
-        TeacherService teacherService = new TeacherService();
+        TeacherRepository teacherRepository = new TeacherRepository();
+        TeacherService teacherService = new TeacherService(teacherRepository);
         StudentService studentService = new StudentService();
         CareerService careerService = new CareerService(careerRepository);
         EvaluationService evaluationService = new EvaluationService(evaluationRepository);

@@ -1,13 +1,12 @@
 package com.is1.proyecto.routes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.is1.proyecto.dto.StudentWithGradeDTO;
 import com.is1.proyecto.services.TeacherService;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.mustache.MustacheTemplateEngine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,12 +19,10 @@ import static spark.Spark.*;
 public class TeacherRoutes {
 
     private final TeacherService teacherService;
-    private final ObjectMapper objectMapper;
     private final MustacheTemplateEngine templateEngine;
 
     public TeacherRoutes(TeacherService teacherService) {
         this.teacherService = teacherService;
-        this.objectMapper = new ObjectMapper();
         this.templateEngine = new MustacheTemplateEngine();
     }
 
@@ -33,14 +30,122 @@ public class TeacherRoutes {
      * Registra todas las rutas de profesor en Spark.
      */
     public void register() {
-        // GET: Muestra el formulario de registro de profesor
         get("/register_teacher", this::showTeacherForm, templateEngine);
-
-        // POST: Crea un nuevo teacher en la base de datos
         post("/register_teacher", this::handleRegisterTeacher);
 
-        // GET: Retorna listado de alumnos inscriptos en una materia del docente
-        get("/teachers/:id/subjects/:subjectId/students", this::handleGetStudents);
+        get("/teachers", this::listTeachers, templateEngine);
+        get("/teachers/:id", this::showTeacherDetail, templateEngine);
+        get("/teachers/:id/subjects", this::showTeacherSubjects, templateEngine);
+        get("/teachers/:id/grades", this::showTeacherGrades, templateEngine);
+        get("/teachers/:id/subjects/:subjectId/students", this::showSubjectStudents, templateEngine);
+    }
+
+    private ModelAndView listTeachers(Request req, Response res) {
+        String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long teacherId = req.session().attribute("teacherId");
+            if (teacherId != null) {
+                res.redirect("/teachers/" + teacherId);
+                return null;
+            }
+        }
+        Map<String, Object> model = new HashMap<>();
+        model.put("teachers", teacherService.getAllTeachers());
+        return new ModelAndView(model, "teacher_list.mustache");
+    }
+
+    private ModelAndView showTeacherDetail(Request req, Response res) {
+        long id = Long.parseLong(req.params(":id"));
+        String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long sessionTeacherId = req.session().attribute("teacherId");
+            if (sessionTeacherId == null || sessionTeacherId != id) {
+                halt(403, "Acceso denegado");
+                return null;
+            }
+        }
+        Map<String, Object> teacher = teacherService.getTeacherWithPerson(id);
+        if (teacher == null) {
+            halt(404, "Docente no encontrado");
+            return null;
+        }
+        List<Map<String, Object>> subjects = teacherService.getAssignedSubjects(id);
+        Map<String, Object> model = new HashMap<>();
+        model.put("teacher", teacher);
+        model.put("subjects", subjects);
+        model.put("teacherId", id);
+        return new ModelAndView(model, "teacher_detail.mustache");
+    }
+
+    private ModelAndView showSubjectStudents(Request req, Response res) {
+        long teacherId = Long.parseLong(req.params(":id"));
+        long subjectId = Long.parseLong(req.params(":subjectId"));
+        String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long sessionTeacherId = req.session().attribute("teacherId");
+            if (sessionTeacherId == null || sessionTeacherId != teacherId) {
+                halt(403, "Acceso denegado");
+                return null;
+            }
+        }
+        List<Map<String, Object>> students = teacherService.getSubjectStudents(teacherId, subjectId);
+        Map<String, Object> model = new HashMap<>();
+        model.put("students", students);
+        model.put("teacherId", teacherId);
+        model.put("subjectId", subjectId);
+        return new ModelAndView(model, "teacher_subject_students.mustache");
+    }
+
+    private ModelAndView showTeacherSubjects(Request req, Response res) {
+        long id = Long.parseLong(req.params(":id"));
+        String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long sessionTeacherId = req.session().attribute("teacherId");
+            if (sessionTeacherId == null || sessionTeacherId != id) {
+                halt(403, "Acceso denegado");
+                return null;
+            }
+        }
+        Map<String, Object> teacher = teacherService.getTeacherWithPerson(id);
+        if (teacher == null) {
+            halt(404, "Docente no encontrado");
+            return null;
+        }
+        Map<String, Object> model = new HashMap<>();
+        model.put("teacher", teacher);
+        model.put("subjects", teacherService.getAssignedSubjects(id));
+        model.put("teacherId", id);
+        return new ModelAndView(model, "teacher_subjects.mustache");
+    }
+
+    private ModelAndView showTeacherGrades(Request req, Response res) {
+        long id = Long.parseLong(req.params(":id"));
+        String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long sessionTeacherId = req.session().attribute("teacherId");
+            if (sessionTeacherId == null || sessionTeacherId != id) {
+                halt(403, "Acceso denegado");
+                return null;
+            }
+        }
+        Map<String, Object> teacher = teacherService.getTeacherWithPerson(id);
+        if (teacher == null) {
+            halt(404, "Docente no encontrado");
+            return null;
+        }
+        List<Map<String, Object>> subjectsWithStudents = new ArrayList<>();
+        for (Map<String, Object> subject : teacherService.getAssignedSubjects(id)) {
+            Long subjectId = ((Number) subject.get("subjectId")).longValue();
+            List<Map<String, Object>> students = teacherService.getSubjectStudents(id, subjectId);
+            Map<String, Object> entry = new HashMap<>(subject);
+            entry.put("students", students);
+            subjectsWithStudents.add(entry);
+        }
+        Map<String, Object> model = new HashMap<>();
+        model.put("teacher", teacher);
+        model.put("subjectsWithGrades", subjectsWithStudents);
+        model.put("teacherId", id);
+        return new ModelAndView(model, "teacher_grades.mustache");
     }
 
     /**
@@ -88,45 +193,4 @@ public class TeacherRoutes {
      * verificando que el docente esté asignado a ella.
      * </p>
      */
-    Object handleGetStudents(Request req, Response res) {
-        res.type("application/json");
-        try {
-            int teacherId = Integer.parseInt(req.params(":id"));
-            int subjectId = Integer.parseInt(req.params(":subjectId"));
-
-            List<StudentWithGradeDTO> students =
-                teacherService.getStudentsBySubject(teacherId, subjectId);
-
-            res.status(200);
-            return objectMapper.writeValueAsString(students);
-
-        } catch (IllegalArgumentException e) {
-            String msg = e.getMessage();
-            int status;
-            if ("Teacher not found".equals(msg) || "Subject not found".equals(msg)) {
-                status = 404;
-            } else if ("Teacher not assigned to this subject".equals(msg)) {
-                status = 403;
-            } else {
-                status = 400;
-            }
-            res.status(status);
-            return toJson(Map.of("error", msg));
-
-        } catch (Exception e) {
-            res.status(500);
-            return toJson(Map.of("error", "Internal server error"));
-        }
-    }
-
-    /**
-     * Convierte un objeto a JSON usando Jackson ObjectMapper.
-     */
-    private String toJson(Object data) {
-        try {
-            return objectMapper.writeValueAsString(data);
-        } catch (Exception e) {
-            return "{}";
-        }
-    }
 }
