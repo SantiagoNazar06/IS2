@@ -89,16 +89,13 @@ public final class DBConfigSingleton {
                 .collect(Collectors.joining("\n"));
     }
 
+    // Métodos para abrir y cerrar la conexión
     public void openConnection() {
-        if (!Base.hasConnection()) {
-            Base.open(this.driver, getDbUrl(), this.user, this.pass);
-        }
+        Base.open(this.driver, getDbUrl(), this.user, this.pass);
     }
 
     public void closeConnection() {
-        if (Base.hasConnection()) {
-            Base.close();
-        }
+        Base.close();
     }
 
     public String getDbUrl() {
