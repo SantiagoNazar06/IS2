@@ -1,11 +1,13 @@
 package com.is1.proyecto.services;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.is1.proyecto.models.User;
 import com.is1.proyecto.security.AuthService;
-import spark.Response;
+import com.is1.proyecto.security.PasswordEncoder;
 
-import java.util.Map;
+import spark.Response;
 
 /**
  * Servicio para operaciones relacionadas con usuarios.
@@ -13,10 +15,12 @@ import java.util.Map;
 public class UserService {
 
     private final AuthService authService;
+    private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
 
     public UserService(AuthService authService) {
         this.authService = authService;
+        this.passwordEncoder = new PasswordEncoder();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -105,16 +109,10 @@ public class UserService {
         try {
             // --- Creación y guardado del usuario usando el modelo ActiveJDBC ---
             User newUser = new User(); // Crea una nueva instancia de tu modelo User.
-            // ¡ADVERTENCIA DE SEGURIDAD CRÍTICA!
-            // En una aplicación real, las contraseñas DEBEN ser hasheadas (ej. con BCrypt)
-            // ANTES de guardarse en la base de datos, NUNCA en texto plano.
-            // (Nota: El código original tenía la contraseña en texto plano aquí.
-            // Se recomienda usar `BCrypt.hashpw(password, BCrypt.gensalt())` como en la
-            // ruta '/user/new').
             newUser.set("name", name); // Asigna el nombre al campo 'name'.
-            newUser.set("role", "STUDENT"); // Asigna rol STUDENT (BCrypt deferido)
-            // TODO: Cifrar la contraseña antes de guardar
-            newUser.set("password", password); // Asigna la contraseña al campo 'password'.
+            newUser.set("role", "STUDENT"); // Asigna rol STUDENT
+            String hashedPassword = passwordEncoder.encode(password); // Hashea la contraseña antes de persistir
+            newUser.set("password", hashedPassword); // Asigna la contraseña hasheada.
             newUser.saveIt(); // Guarda el nuevo usuario en la tabla 'users'.
 
             res.status(201); // Created.
