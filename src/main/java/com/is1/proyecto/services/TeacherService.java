@@ -168,7 +168,7 @@ public class TeacherService {
             }
 
             students.add(new StudentWithGradeDTO(
-                (Long) student.getId(),
+                ((Number) student.getId()).longValue(),
                 fullName,
                 enrollment.getCreatedAt(),
                 grade,

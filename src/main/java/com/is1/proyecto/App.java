@@ -5,6 +5,7 @@ import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la 
 import com.is1.proyecto.repositories.CareerRepository;
 import com.is1.proyecto.repositories.EvaluationRepository;
 import com.is1.proyecto.repositories.ConditionRepository;
+import com.is1.proyecto.repositories.PersonRepository;
 import com.is1.proyecto.repositories.StudentRepository;
 import com.is1.proyecto.repositories.SubjectRepository;
 import com.is1.proyecto.repositories.StudyPlanRepository;
@@ -68,6 +69,7 @@ public class App {
         CareerRepository careerRepository = new CareerRepository();
         EvaluationRepository evaluationRepository = new EvaluationRepository();
         ConditionRepository conditionRepository = new ConditionRepository();
+        PersonRepository personRepository = new PersonRepository();
         StudentRepository studentRepository = new StudentRepository();
         SubjectRepository subjectRepository = new SubjectRepository();
         StudyPlanRepository studyPlanRepository = new StudyPlanRepository();
@@ -92,7 +94,7 @@ public class App {
 
         // --- Registro de rutas ---
         // Cada grupo de rutas se registra con sus servicios correspondientes
-        new UserRoutes(authService, userService).register();
+        new UserRoutes(authService, userService, personRepository).register();
         new TeacherRoutes(teacherService).register();
         ObjectMapper objectMapper = new ObjectMapper();
         new StudentRoutes(studentService, careerService, subjectService, objectMapper).register();

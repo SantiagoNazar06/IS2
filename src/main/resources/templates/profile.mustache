@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Mi Perfil</h1>
+            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                {{#person}}{{firstName}}{{/person}}
+            </div>
+        </div>
+
+        {{#successMessage}}
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{successMessage}}</span>
+        </div>
+        {{/successMessage}}
+
+        {{#errorMessage}}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{errorMessage}}</span>
+        </div>
+        {{/errorMessage}}
+
+        <form action="/profile" method="post" class="space-y-4">
+            {{#person}}
+            <div>
+                <label for="dni" class="block text-gray-700 text-sm font-medium mb-1">DNI:</label>
+                <p class="w-full px-4 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600">{{dni}}</p>
+            </div>
+
+            <div>
+                <label for="firstName" class="block text-gray-700 text-sm font-medium mb-1">Nombre:</label>
+                <input type="text" id="firstName" name="firstName" value="{{firstName}}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="lastName" class="block text-gray-700 text-sm font-medium mb-1">Apellido:</label>
+                <input type="text" id="lastName" name="lastName" value="{{lastName}}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="phone" class="block text-gray-700 text-sm font-medium mb-1">Teléfono:</label>
+                <input type="text" id="phone" name="phone" value="{{phone}}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="email" class="block text-gray-700 text-sm font-medium mb-1">Email:</label>
+                <input type="text" id="email" name="email" value="{{email}}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            {{/person}}
+
+            <div>
+                {{#isStudent}}
+                <label class="block text-gray-700 text-sm font-medium mb-1">Tipo de Estudiante:</label>
+                {{/isStudent}}
+                {{#isTeacher}}
+                <label class="block text-gray-700 text-sm font-medium mb-1">Legajo:</label>
+                {{/isTeacher}}
+                <p class="w-full px-4 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600">{{roleSpecificField}}</p>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Guardar Cambios
+            </button>
+        </form>
+
+        <div class="text-center mt-6">
+            <a href="/dashboard" class="text-blue-600 hover:underline text-sm">Volver al panel</a>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/logout" class="inline-block bg-red-600 text-white py-2 px-6 rounded-md hover:bg-red-700 transition duration-300 text-sm">Cerrar Sesión</a>
+        </div>
+    </div>
+</body>
+</html>

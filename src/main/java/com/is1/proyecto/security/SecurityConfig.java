@@ -78,6 +78,9 @@ public class SecurityConfig {
         
         // Rutas de evaluaciones - ADMIN y TEACHER
         PROTECTED_ROUTES.put("/evaluations", Set.of(Role.ADMIN, Role.TEACHER));
+        
+        // Ruta de perfil - STUDENT y TEACHER (admin excluido)
+        PROTECTED_ROUTES.put("/profile", Set.of(Role.STUDENT, Role.TEACHER));
     }
 
     // ==================== CÓDIGOS DE ERROR ====================

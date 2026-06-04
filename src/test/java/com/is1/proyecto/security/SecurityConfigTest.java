@@ -198,6 +198,16 @@ class SecurityConfigTest {
         assertTrue(enrollRoles.contains(Role.STUDENT));
     }
 
+    @Test
+    void getRequiredRoles_profileRequiresStudentAndTeacher() {
+        Set<Role> roles = SecurityConfig.getRequiredRoles("/profile");
+        assertNotNull(roles);
+        assertEquals(2, roles.size());
+        assertTrue(roles.contains(Role.STUDENT));
+        assertTrue(roles.contains(Role.TEACHER));
+        assertFalse(roles.contains(Role.ADMIN));
+    }
+
     // ==================== requiresAuthentication Tests ====================
 
     @Test

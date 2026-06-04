@@ -1,5 +1,9 @@
 package com.is1.proyecto.routes;
 
+import com.is1.proyecto.models.Person;
+import com.is1.proyecto.models.Student;
+import com.is1.proyecto.models.Teacher;
+import com.is1.proyecto.repositories.PersonRepository;
 import com.is1.proyecto.security.AuthService;
 import com.is1.proyecto.services.UserService;
 import spark.ModelAndView;
@@ -19,11 +23,13 @@ public class UserRoutes {
 
     private final AuthService authService;
     private final UserService userService;
+    private final PersonRepository personRepository;
     private final MustacheTemplateEngine templateEngine;
 
-    public UserRoutes(AuthService authService, UserService userService) {
+    public UserRoutes(AuthService authService, UserService userService, PersonRepository personRepository) {
         this.authService = authService;
         this.userService = userService;
+        this.personRepository = personRepository;
         this.templateEngine = new MustacheTemplateEngine();
     }
 
@@ -57,6 +63,12 @@ public class UserRoutes {
 
         // POST: Endpoint para añadir usuarios (API que devuelve JSON, no HTML).
         post("/add_users", this::handleAddUsers);
+
+        // GET: Muestra el formulario de perfil del usuario autenticado.
+        get("/profile", this::showProfile, templateEngine);
+
+        // POST: Procesa la actualización del perfil.
+        post("/profile", this::handleProfileUpdate);
     }
 
     /**
@@ -193,6 +205,109 @@ public class UserRoutes {
         String password = req.queryParams("password");
 
         return userService.addUserApi(name, password, res);
+    }
+
+    /**
+     * GET /profile — Muestra el formulario de perfil del usuario autenticado.
+     * Busca la Person asociada según el rol (STUDENT o TEACHER) y pre-carga los datos.
+     */
+    ModelAndView showProfile(Request req, Response res) {
+        Map<String, Object> model = new HashMap<>();
+
+        String role = req.session().attribute("userRole");
+        Person person = findPersonForRole(req, role);
+
+        model.put("person", person);
+        model.put("role", role);
+        model.put("isStudent", "STUDENT".equals(role));
+        model.put("isTeacher", "TEACHER".equals(role));
+        model.put("roleSpecificField", resolveRoleSpecificField(req, role));
+
+        // Pasar mensajes desde query params (redirect después de POST)
+        String successMessage = req.queryParams("success");
+        if (successMessage != null && !successMessage.isEmpty()) {
+            model.put("successMessage", successMessage);
+        }
+        String errorMessage = req.queryParams("error");
+        if (errorMessage != null && !errorMessage.isEmpty()) {
+            model.put("errorMessage", errorMessage);
+        }
+
+        return new ModelAndView(model, "profile.mustache");
+    }
+
+    /**
+     * POST /profile — Procesa la actualización del perfil.
+     * Valida que firstName y lastName no estén vacíos, luego actualiza vía PersonRepository.
+     */
+    Object handleProfileUpdate(Request req, Response res) {
+        String firstName = req.queryParams("firstName");
+        String lastName = req.queryParams("lastName");
+        String role = req.session().attribute("userRole");
+
+        Person person = findPersonForRole(req, role);
+
+        // Validación: firstName y lastName no pueden estar vacíos
+        if (firstName == null || firstName.trim().isEmpty()
+                || lastName == null || lastName.trim().isEmpty()) {
+            Map<String, Object> model = new HashMap<>();
+            model.put("person", person);
+            model.put("role", role);
+            model.put("isStudent", "STUDENT".equals(role));
+            model.put("isTeacher", "TEACHER".equals(role));
+            model.put("roleSpecificField", resolveRoleSpecificField(req, role));
+            model.put("errorMessage", "Nombre y apellido son obligatorios.");
+            return new ModelAndView(model, "profile.mustache");
+        }
+
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("firstName", firstName.trim());
+        fields.put("lastName", lastName.trim());
+        fields.put("phone", req.queryParams("phone") != null ? req.queryParams("phone").trim() : "");
+        fields.put("email", req.queryParams("email") != null ? req.queryParams("email").trim() : "");
+
+        personRepository.update(((Number) person.getId()).longValue(), fields);
+
+        res.redirect("/profile?success=Perfil actualizado correctamente.");
+        return null;
+    }
+
+    /**
+     * Busca la Person asociada al usuario autenticado según su rol.
+     */
+    /**
+     * Obtiene el campo específico del rol (student_type o nroLegajo).
+     */
+    String resolveRoleSpecificField(Request req, String role) {
+        if ("STUDENT".equals(role)) {
+            Long sid = (Long) req.session().attribute("studentId");
+            if (sid == null) return "";
+            Student student = Student.findById(sid);
+            if (student == null) return "";
+            return student.getType();
+        } else if ("TEACHER".equals(role)) {
+            Long tid = (Long) req.session().attribute("teacherId");
+            if (tid == null) return "";
+            Teacher teacher = Teacher.findById(tid);
+            if (teacher == null) return "";
+            return teacher.getNroLegajo();
+        }
+        return "";
+    }
+
+    Person findPersonForRole(Request req, String role) {
+        if ("STUDENT".equals(role)) {
+            Long sid = (Long) req.session().attribute("studentId");
+            if (sid == null) return null;
+            Student student = Student.findById(sid);
+            if (student == null) return null;
+            return student.getPerson();
+        }
+        Long tid = (Long) req.session().attribute("teacherId");
+        if (tid == null) return null;
+        Teacher teacher = Teacher.findById(tid);
+        if (teacher == null) return null;
+        return teacher.getPerson();
     }
 
     /**
