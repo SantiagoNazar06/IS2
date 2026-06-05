@@ -3,6 +3,7 @@ package com.is1.proyecto.routes;
 import com.is1.proyecto.models.Person;
 import com.is1.proyecto.repositories.PersonRepository;
 import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ class UserRoutesProfileTest {
     @Mock
     private PersonRepository personRepository;
     @Mock
+    private TeacherService teacherService;
+    @Mock
     private Request req;
     @Mock
     private Response res;
@@ -46,7 +49,7 @@ class UserRoutesProfileTest {
         person = mock(Person.class);
         lenient().when(person.getId()).thenReturn(1L);
 
-        userRoutes = spy(new UserRoutes(authService, userService, personRepository));
+        userRoutes = spy(new UserRoutes(authService, userService, personRepository, teacherService));
     }
 
     // ==================== GET /profile — showProfile ====================

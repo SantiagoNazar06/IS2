@@ -132,6 +132,20 @@ public final class DBConfigSingleton {
             } catch (Exception e) {
                 // Ya existe, ignorar
             }
+
+            // Migracion 6: indices en teacher_assignments
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_id ON teacher_assignments(teacher_id)");
+                System.out.println("[DB] Migracion: indice idx_teacher_assignments_teacher_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice teacher_id fallo: " + e.getMessage());
+            }
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_teacher_assignments_subject_id ON teacher_assignments(subject_id)");
+                System.out.println("[DB] Migracion: indice idx_teacher_assignments_subject_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice subject_id fallo: " + e.getMessage());
+            }
         } catch (Exception e) {
             System.err.println("[DB] Migracion fallo (no critico): " + e.getMessage());
         }

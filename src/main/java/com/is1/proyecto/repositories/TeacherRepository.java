@@ -1,6 +1,7 @@
 package com.is1.proyecto.repositories;
 
 import com.is1.proyecto.models.Teacher;
+import com.is1.proyecto.models.TeacherAssignment;
 import org.javalite.activejdbc.Base;
 
 import java.util.ArrayList;
@@ -114,6 +115,28 @@ public class TeacherRepository {
         return result;
     }
 
+    public List<TeacherAssignment> findByTeacherAndPeriod(Long teacherId, String period) {
+        return TeacherAssignment.where("teacher_id = ? AND period = ?", teacherId, period);
+    }
+
+    public List<Map<String, Object>> findAllAssignmentsWithDetails() {
+        String sql =
+            "SELECT ta.id, ta.teacher_id, ta.subject_id, ta.role, ta.period, " +
+            "       t.nroLegajo, p.firstName, p.lastName, " +
+            "       s.subject_name, s.code AS subject_code " +
+            "FROM teacher_assignments ta " +
+            "JOIN teachers t ON t.id = ta.teacher_id " +
+            "JOIN persons p ON p.id = t.id_persona " +
+            "JOIN subjects s ON s.id_subject = ta.subject_id " +
+            "ORDER BY ta.period DESC, p.lastName, p.firstName";
+        List<Map> rows = Base.findAll(sql);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map row : rows) {
+            result.add(new HashMap<>(row));
+        }
+        return result;
+    }
+
     // AC-5: materias asignadas a un docente con su rol y período
     public List<Map<String, Object>> getAssignedSubjects(Long teacherId) {
         String sql =
@@ -134,4 +157,5 @@ public class TeacherRepository {
         }
         return result;
     }
+    
 }

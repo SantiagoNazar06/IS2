@@ -39,6 +39,7 @@ public class SecurityConfig {
 
     static {
         // Rutas administrativas - solo ADMIN
+        PROTECTED_ROUTES.put("/admin/assignments", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/admin", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/add_users", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/delete", Set.of(Role.ADMIN));
@@ -66,6 +67,7 @@ public class SecurityConfig {
         PROTECTED_ROUTES.put("/career", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));
         
         // Rutas de materias - ADMIN y TEACHER
+        PROTECTED_ROUTES.put("/teacher/assignments", Set.of(Role.TEACHER));
         PROTECTED_ROUTES.put("/subjects", Set.of(Role.ADMIN, Role.TEACHER));
         PROTECTED_ROUTES.put("/subject", Set.of(Role.ADMIN, Role.TEACHER));
         

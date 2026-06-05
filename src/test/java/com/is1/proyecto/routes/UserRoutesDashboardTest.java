@@ -2,6 +2,7 @@ package com.is1.proyecto.routes;
 
 import com.is1.proyecto.repositories.PersonRepository;
 import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ class UserRoutesDashboardTest {
     @Mock
     private PersonRepository personRepository;
     @Mock
+    private TeacherService teacherService;
+    @Mock
     private Request req;
     @Mock
     private Response res;
@@ -41,7 +44,7 @@ class UserRoutesDashboardTest {
 
     @BeforeEach
     void setup() {
-        userRoutes = new UserRoutes(authService, userService, personRepository);
+        userRoutes = new UserRoutes(authService, userService, personRepository, teacherService);
     }
 
     @Test

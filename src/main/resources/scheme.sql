@@ -116,6 +116,9 @@ CREATE TABLE teacher_assignments (
     UNIQUE(teacher_id, subject_id, period)
 );
 
+CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_id ON teacher_assignments(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_assignments_subject_id ON teacher_assignments(subject_id);
+
 DROP TABLE IF EXISTS teacher_subject;
 
 CREATE TABLE teacher_subject (
