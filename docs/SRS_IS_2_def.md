@@ -107,7 +107,7 @@ Se emplea Docker con imágenes base Alpine para lograr contenedores mínimos (~5
 
 ## **Problemas encontrados**
 
--
+- 
 
 ---
 
@@ -268,6 +268,8 @@ Profesor "1" -- "1..*" Materia : Responsable
 %% Reemplaza la relación N:M directa entre Estudiante y Materia
 
 Estudiante "1" -- "0..*" Evaluacion : Realiza
+
+Estudiante "1..*" -- "1..*" Materia : Realiza
 
 Materia "1" -- "0..*" Evaluacion : Pertenece a
 
