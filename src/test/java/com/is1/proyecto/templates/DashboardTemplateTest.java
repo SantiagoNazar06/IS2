@@ -17,12 +17,10 @@ class DashboardTemplateTest {
     void adminDashboard_hasAdminSections() throws Exception {
         String content = loadTemplate("templates/dashboard_admin.mustache");
         assertTrue(content.contains("Panel de Administración"), "Admin debe tener título propio");
-        assertTrue(content.contains("Registrar Profesor"), "Admin debe tener Registrar Profesor");
-        assertTrue(content.contains("Registrar Estudiante"), "Admin debe tener Registrar Estudiante");
+        assertTrue(content.contains("Gestionar Profesores"), "Admin debe tener Gestionar Profesores");
+        assertTrue(content.contains("Gestionar Estudiantes"), "Admin debe tener Gestionar Estudiantes");
         assertTrue(content.contains("Gestionar Carreras"), "Admin debe tener Gestionar Carreras");
         assertTrue(content.contains("Gestionar Materias"), "Admin debe tener Gestionar Materias");
-        assertTrue(content.contains("Listado de Estudiantes"), "Admin debe tener listado estudiantes");
-        assertTrue(content.contains("Listado de Profesores"), "Admin debe tener listado profesores");
         assertTrue(content.contains("Gestionar Calificaciones"), "Admin debe tener calificaciones");
         assertTrue(content.contains("Cerrar Sesión"), "Admin debe tener cerrar sesión");
     }
@@ -41,6 +39,7 @@ class DashboardTemplateTest {
     void teacherDashboard_excludesAdminSections() throws Exception {
         String content = loadTemplate("templates/dashboard_teacher.mustache");
         assertFalse(content.contains("Registrar Profesor"), "Teacher NO debe tener Registrar Profesor");
+        assertFalse(content.contains("Gestionar Profesores"), "Teacher NO debe tener Gestionar Profesores");
         assertFalse(content.contains("Registrar Estudiante"), "Teacher NO debe tener Registrar Estudiante");
         assertFalse(content.contains("Gestionar Carreras"), "Teacher NO debe tener Gestionar Carreras");
         assertFalse(content.contains("Listado de Profesores"), "Teacher NO debe tener listado profesores");
@@ -62,6 +61,7 @@ class DashboardTemplateTest {
         assertFalse(content.contains("Registrar Profesor"), "Student NO debe tener Registrar Profesor");
         assertFalse(content.contains("Registrar Estudiante"), "Student NO debe tener Registrar Estudiante");
         assertFalse(content.contains("Gestionar Carreras"), "Student NO debe tener Gestionar Carreras");
+        assertFalse(content.contains("Gestionar Estudiantes"), "Student NO debe tener Gestionar Estudiantes");
         assertFalse(content.contains("Gestionar Calificaciones"), "Student NO debe tener gestionar calificaciones");
         assertFalse(content.contains("Listado de Estudiantes"), "Student NO debe tener listado estudiantes");
         assertFalse(content.contains("Listado de Profesores"), "Student NO debe tener listado profesores");

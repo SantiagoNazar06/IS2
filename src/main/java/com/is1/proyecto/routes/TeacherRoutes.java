@@ -32,6 +32,8 @@ public class TeacherRoutes {
     public void register() {
         get("/register_teacher", this::showTeacherForm, templateEngine);
         post("/register_teacher", this::handleRegisterTeacher);
+        post("/update_teacher/:id", this::handleUpdateTeacher);
+        post("/delete_teacher/:id", this::handleDeleteTeacher);
 
         get("/teachers", this::listTeachers, templateEngine);
         get("/teachers/:id", this::showTeacherDetail, templateEngine);
@@ -161,6 +163,27 @@ public class TeacherRoutes {
         if (successMessage != null && !successMessage.isEmpty()) {
             model.put("successMessage", successMessage);
         }
+
+        String editParam = req.queryParams("edit");
+        if (editParam != null && !editParam.isEmpty()) {
+            try {
+                Long teacherId = Long.parseLong(editParam);
+                Map<String, Object> teacher = teacherService.getTeacherWithPerson(teacherId);
+                if (teacher != null) {
+                    model.put("editMode", true);
+                    model.put("teacherId", teacherId);
+                    model.put("dni", teacher.getOrDefault("dni", ""));
+                    model.put("nroLegajo", teacher.getOrDefault("legajo", ""));
+                    model.put("firstName", teacher.getOrDefault("firstName", ""));
+                    model.put("lastName", teacher.getOrDefault("lastName", ""));
+                    model.put("phone", teacher.getOrDefault("phone", ""));
+                    model.put("email", teacher.getOrDefault("email", ""));
+                }
+            } catch (NumberFormatException e) {
+                // ignorar
+            }
+        }
+
         return new ModelAndView(model, "teacher_form.mustache");
     }
 
@@ -184,6 +207,56 @@ public class TeacherRoutes {
         res.status(result.statusCode);
         res.redirect(result.redirectUrl);
         return ""; // Retorna una cadena vacía ya que la respuesta ya fue redirigida.
+    }
+
+    private Object handleUpdateTeacher(Request req, Response res) {
+        try {
+            Long id = Long.parseLong(req.params(":id"));
+            String dni = req.queryParams("dni");
+            String nroLegajo = req.queryParams("nroLegajo");
+            String firstName = req.queryParams("firstName");
+            String lastName = req.queryParams("lastName");
+            String phone = req.queryParams("phone");
+            String email = req.queryParams("email");
+
+            TeacherService.TeacherData data = new TeacherService.TeacherData(
+                dni, nroLegajo, firstName, lastName, phone, email
+            );
+
+            TeacherService.TeacherRegisterResult result = teacherService.updateTeacher(id, data);
+
+            if (result.redirectUrl != null) {
+                res.redirect(result.redirectUrl);
+            } else {
+                res.status(result.statusCode);
+                res.redirect("/register_teacher?edit=" + id + "&error=" + result.message);
+            }
+            return "";
+
+        } catch (NumberFormatException e) {
+            res.redirect("/teachers?error=ID de profesor invalido");
+            return "";
+        }
+    }
+
+    private Object handleDeleteTeacher(Request req, Response res) {
+        try {
+            Long id = Long.parseLong(req.params(":id"));
+
+            TeacherService.TeacherRegisterResult result = teacherService.deleteTeacher(id);
+
+            if (result.redirectUrl != null) {
+                res.redirect(result.redirectUrl);
+            } else {
+                res.status(result.statusCode);
+                res.redirect("/teachers?error=" + result.message);
+            }
+            return "";
+
+        } catch (NumberFormatException e) {
+            res.redirect("/teachers?error=ID de profesor invalido");
+            return "";
+        }
     }
 
     /**

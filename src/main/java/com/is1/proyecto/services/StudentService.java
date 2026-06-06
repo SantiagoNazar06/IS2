@@ -64,6 +64,26 @@ public class StudentService {
         public static StudentRegisterResult duplicate(String dni) {
             return new StudentRegisterResult(false, 400, "/register_student?error=Ya existe un estudiante con el DNI " + dni, null);
         }
+
+        public static StudentRegisterResult okEdit(Long id, String message) {
+            return new StudentRegisterResult(true, 200, "/register_student?edit=" + id + "&message=" + message, null);
+        }
+
+        public static StudentRegisterResult errorEdit(Long id, String message) {
+            return new StudentRegisterResult(false, 400, "/register_student?edit=" + id + "&error=" + message, null);
+        }
+
+        public static StudentRegisterResult okList(String message) {
+            return new StudentRegisterResult(true, 200, "/students?message=" + message, null);
+        }
+
+        public static StudentRegisterResult errorList(String message) {
+            return new StudentRegisterResult(false, 400, "/students?error=" + message, null);
+        }
+
+        public static StudentRegisterResult notFound() {
+            return new StudentRegisterResult(false, 404, null, null);
+        }
     }
 
     /**
@@ -134,6 +154,72 @@ public class StudentService {
             System.err.println("Error al registrar el estudiante: " + e.getMessage());
             e.printStackTrace(); // Imprime el stack trace para depuración.
             return StudentRegisterResult.error("Error interno al crear la cuenta. Intente de nuevo.");
+        }
+    }
+
+    /**
+     * Actualiza un estudiante existente.
+     *
+     * @param id   ID del estudiante
+     * @param data Nuevos datos del estudiante
+     * @return StudentRegisterResult con el resultado de la operacion
+     */
+    public StudentRegisterResult updateStudent(Long id, StudentData data) {
+        try {
+            Student student = Student.findById(id);
+            if (student == null) {
+                return StudentRegisterResult.notFound();
+            }
+
+            Person person = student.getPerson();
+            if (person == null) {
+                return StudentRegisterResult.errorEdit(id, "El estudiante no tiene persona asociada.");
+            }
+
+            person.setDni(data.dni);
+            person.setFirstName(data.firstName);
+            person.setLastName(data.lastName);
+            person.setPhone(data.phone);
+            person.setEmail(data.email);
+            person.saveIt();
+
+            student.setType(data.type);
+            student.saveIt();
+
+            return StudentRegisterResult.okEdit(id, "Estudiante actualizado exitosamente.");
+
+        } catch (Exception e) {
+            System.err.println("Error al actualizar el estudiante: " + e.getMessage());
+            e.printStackTrace();
+            return StudentRegisterResult.errorEdit(id, "Error interno al actualizar el estudiante.");
+        }
+    }
+
+    /**
+     * Elimina un estudiante por su ID.
+     *
+     * @param id ID del estudiante
+     * @return StudentRegisterResult con el resultado de la operacion
+     */
+    public StudentRegisterResult deleteStudent(Long id) {
+        try {
+            Student student = Student.findById(id);
+            if (student == null) {
+                return StudentRegisterResult.notFound();
+            }
+
+            Person person = student.getPerson();
+            student.delete();
+            if (person != null) {
+                person.delete();
+            }
+
+            return StudentRegisterResult.okList("Estudiante eliminado exitosamente.");
+
+        } catch (Exception e) {
+            System.err.println("Error al eliminar el estudiante: " + e.getMessage());
+            e.printStackTrace();
+            return StudentRegisterResult.errorList("Error interno al eliminar el estudiante.");
         }
     }
 }

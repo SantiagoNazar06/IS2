@@ -51,6 +51,26 @@ public class TeacherService {
         public static TeacherRegisterResult duplicate(String dni) {
             return new TeacherRegisterResult(false, 400, "/register_teacher?error=Ya existe un profesor con el DNI " + dni, null);
         }
+
+        public static TeacherRegisterResult okEdit(Long id, String message) {
+            return new TeacherRegisterResult(true, 200, "/register_teacher?edit=" + id + "&message=" + message, null);
+        }
+
+        public static TeacherRegisterResult errorEdit(Long id, String message) {
+            return new TeacherRegisterResult(false, 400, "/register_teacher?edit=" + id + "&error=" + message, null);
+        }
+
+        public static TeacherRegisterResult okList(String message) {
+            return new TeacherRegisterResult(true, 200, "/teachers?message=" + message, null);
+        }
+
+        public static TeacherRegisterResult errorList(String message) {
+            return new TeacherRegisterResult(false, 400, "/teachers?error=" + message, null);
+        }
+
+        public static TeacherRegisterResult notFound() {
+            return new TeacherRegisterResult(false, 404, null, null);
+        }
     }
 
     /**
@@ -180,6 +200,59 @@ public class TeacherService {
             result.add(item);
         }
         return result;
+    }
+
+    public TeacherRegisterResult updateTeacher(Long id, TeacherData data) {
+        try {
+            Teacher teacher = Teacher.findById(id);
+            if (teacher == null) {
+                return TeacherRegisterResult.notFound();
+            }
+
+            Person person = teacher.getPerson();
+            if (person == null) {
+                return TeacherRegisterResult.errorEdit(id, "El profesor no tiene persona asociada.");
+            }
+
+            person.setDni(data.dni);
+            person.setFirstName(data.firstName);
+            person.setLastName(data.lastName);
+            person.setPhone(data.phone);
+            person.setEmail(data.email);
+            person.saveIt();
+
+            teacher.setNroLegajo(data.nroLegajo);
+            teacher.saveIt();
+
+            return TeacherRegisterResult.okEdit(id, "Profesor actualizado exitosamente.");
+
+        } catch (Exception e) {
+            System.err.println("Error al actualizar el profesor: " + e.getMessage());
+            e.printStackTrace();
+            return TeacherRegisterResult.errorEdit(id, "Error interno al actualizar el profesor.");
+        }
+    }
+
+    public TeacherRegisterResult deleteTeacher(Long id) {
+        try {
+            Teacher teacher = Teacher.findById(id);
+            if (teacher == null) {
+                return TeacherRegisterResult.notFound();
+            }
+
+            Person person = teacher.getPerson();
+            teacher.delete();
+            if (person != null) {
+                person.delete();
+            }
+
+            return TeacherRegisterResult.okList("Profesor eliminado exitosamente.");
+
+        } catch (Exception e) {
+            System.err.println("Error al eliminar el profesor: " + e.getMessage());
+            e.printStackTrace();
+            return TeacherRegisterResult.errorList("Error interno al eliminar el profesor.");
+        }
     }
 
     public List<Map<String, Object>> getAssignedSubjectsSimple(Long teacherId) {
