@@ -42,11 +42,16 @@ public class SecurityConfig {
         PROTECTED_ROUTES.put("/admin/assignments", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/admin", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/add_users", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/api/users", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/delete", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/update", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/new", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/register_teacher", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/update_teacher", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/delete_teacher", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/register_student", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/update_student", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/delete_student", Set.of(Role.ADMIN));
         
         // Rutas de dashboard - cualquier usuario autenticado
         PROTECTED_ROUTES.put("/dashboard", Set.of(Role.ADMIN, Role.STUDENT, Role.TEACHER));

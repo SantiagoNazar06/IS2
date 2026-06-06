@@ -3,6 +3,7 @@ package com.is1.proyecto.routes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.is1.proyecto.dto.StudentListDTO;
 import com.is1.proyecto.models.Enrollment;
+import com.is1.proyecto.models.Person;
 import com.is1.proyecto.models.Student;
 import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.services.CareerService;
@@ -43,6 +44,8 @@ public class StudentRoutes {
         get("/register_student", this::showStudentForm, templateEngine);
         post("/register_student", this::handleRegisterStudent);
         get("/students", this::showStudents, templateEngine);
+        post("/update_student/:id", this::handleUpdateStudent);
+        post("/delete_student/:id", this::handleDeleteStudent);
         post("/enrollments/student/:id", this::handleEnroll);
     }
 
@@ -56,6 +59,28 @@ public class StudentRoutes {
         if (successMessage != null && !successMessage.isEmpty()) {
             model.put("successMessage", successMessage);
         }
+
+        String editParam = req.queryParams("edit");
+        if (editParam != null && !editParam.isEmpty()) {
+            try {
+                Long studentId = Long.parseLong(editParam);
+                Student student = Student.findById(studentId);
+                if (student != null) {
+                    Person person = student.getPerson();
+                    model.put("editMode", true);
+                    model.put("studentId", studentId);
+                    model.put("dni", person != null ? person.getDni() : "");
+                    model.put("student_type", student.getType());
+                    model.put("firstName", person != null ? person.getFirstName() : "");
+                    model.put("lastName", person != null ? person.getLastName() : "");
+                    model.put("phone", person != null ? person.getPhone() : "");
+                    model.put("email", person != null ? person.getEmail() : "");
+                }
+            } catch (NumberFormatException e) {
+                // si el ID no es valido, ignoramos y mostramos el formulario vacio
+            }
+        }
+
         return new ModelAndView(model, "student_form.mustache");
     }
 
@@ -76,6 +101,56 @@ public class StudentRoutes {
         res.status(result.statusCode);
         res.redirect(result.redirectUrl);
         return "";
+    }
+
+    private Object handleUpdateStudent(Request req, Response res) {
+        try {
+            Long id = Long.parseLong(req.params(":id"));
+            String dni = req.queryParams("dni");
+            String type = req.queryParams("student_type");
+            String firstName = req.queryParams("firstName");
+            String lastName = req.queryParams("lastName");
+            String phone = req.queryParams("phone");
+            String email = req.queryParams("email");
+
+            StudentService.StudentData data = new StudentService.StudentData(
+                dni, type, firstName, lastName, phone, email
+            );
+
+            StudentService.StudentRegisterResult result = studentService.updateStudent(id, data);
+
+            if (result.redirectUrl != null) {
+                res.redirect(result.redirectUrl);
+            } else {
+                res.status(result.statusCode);
+                res.redirect("/register_student?edit=" + id + "&error=" + result.message);
+            }
+            return "";
+
+        } catch (NumberFormatException e) {
+            res.redirect("/students?error=ID de estudiante invalido");
+            return "";
+        }
+    }
+
+    private Object handleDeleteStudent(Request req, Response res) {
+        try {
+            Long id = Long.parseLong(req.params(":id"));
+
+            StudentService.StudentRegisterResult result = studentService.deleteStudent(id);
+
+            if (result.redirectUrl != null) {
+                res.redirect(result.redirectUrl);
+            } else {
+                res.status(result.statusCode);
+                res.redirect("/students?error=" + result.message);
+            }
+            return "";
+
+        } catch (NumberFormatException e) {
+            res.redirect("/students?error=ID de estudiante invalido");
+            return "";
+        }
     }
 
     // GET /students — listado de estudiantes con filtros
