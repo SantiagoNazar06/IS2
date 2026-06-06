@@ -22,12 +22,18 @@ public class TeacherAssignment extends Model {
         set("subject_id", subjectId);
     }
 
-    public String getRole() {
-        return getString("role");
+    public TeacherRole getRole() {
+        String raw = getString("role");
+        if (raw == null) return null;
+        return TeacherRole.fromString(raw);
     }
 
-    public void setRole(String role) {
-        set("role", role);
+    public void setRole(TeacherRole role) {
+        if (role == null) {
+            set("role", null);
+        } else {
+            set("role", role.name());
+        }
     }
 
     public String getPeriod() {
@@ -37,4 +43,5 @@ public class TeacherAssignment extends Model {
     public void setPeriod(String period) {
         set("period", period);
     }
+
 }

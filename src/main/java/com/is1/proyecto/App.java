@@ -3,6 +3,7 @@ package com.is1.proyecto; // Define el paquete de la aplicación, debe coincidir
 import com.is1.proyecto.config.DBConfigSingleton; // Clase Singleton para la configuración de la base de datos.
 import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la base de datos.
 import com.is1.proyecto.repositories.*;
+import com.is1.proyecto.routes.AssignmentRoutes;
 import com.is1.proyecto.routes.CareerRoutes;
 import com.is1.proyecto.routes.EvaluationRoutes;
 import com.is1.proyecto.routes.StudentRoutes;
@@ -89,7 +90,8 @@ public class App {
 
         // --- Registro de rutas ---
         // Cada grupo de rutas se registra con sus servicios correspondientes
-        new UserRoutes(authService, userService, personRepository).register();
+        new UserRoutes(authService, userService, personRepository, teacherService).register();
+        new AssignmentRoutes(teacherService).register();
         new TeacherRoutes(teacherService).register();
         ObjectMapper objectMapper = new ObjectMapper();
         new StudentRoutes(studentService, careerService, subjectService, objectMapper).register();

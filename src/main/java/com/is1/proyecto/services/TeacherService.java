@@ -1,10 +1,15 @@
 package com.is1.proyecto.services;
 
 import com.is1.proyecto.models.Person;
+import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.models.Teacher;
+import com.is1.proyecto.models.TeacherAssignment;
+import com.is1.proyecto.models.TeacherRole;
 import com.is1.proyecto.repositories.TeacherRepository;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -134,5 +139,57 @@ public class TeacherService {
 
     public List<Map<String, Object>> getGrades(Long teacherId, Long subjectId) {
         return getSubjectStudents(teacherId, subjectId);
+    }
+
+    public List<Map<String, Object>> getAllAssignments() {
+        List<Map<String, Object>> assignments = teacherRepository.findAllAssignmentsWithDetails();
+        for (Map<String, Object> a : assignments) {
+            String role = (String) a.get("role");
+            a.put("isResponsable", "RESPONSABLE".equals(role));
+            a.put("isJtp", "JTP".equals(role));
+            a.put("isAyudante", "AYUDANTE".equals(role));
+        }
+        return assignments;
+    }
+
+    public TeacherAssignment createAssignment(Long teacherId, Long subjectId, String period, String role) {
+        TeacherAssignment ta = new TeacherAssignment();
+        ta.setTeacherId(teacherId);
+        ta.setSubjectId(subjectId);
+        ta.setPeriod(period);
+        ta.setRole(TeacherRole.fromString(role));
+        ta.saveIt();
+        return ta;
+    }
+
+    public boolean deleteAssignment(Long id) {
+        TeacherAssignment ta = TeacherAssignment.findById(id);
+        if (ta == null) return false;
+        ta.delete();
+        return true;
+    }
+
+    public List<Map<String, Object>> getAllSubjectsSimple() {
+        List<Subject> subjects = Subject.findAll();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Subject s : subjects) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", s.getId());
+            item.put("name", s.getSubjectName());
+            item.put("code", s.getCode());
+            result.add(item);
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> getAssignedSubjectsSimple(Long teacherId) {
+        List<Map<String, Object>> subjects = teacherRepository.getAssignedSubjects(teacherId);
+        for (Map<String, Object> s : subjects) {
+            String role = (String) s.get("role");
+            s.put("isResponsable", "RESPONSABLE".equals(role));
+            s.put("isJtp", "JTP".equals(role));
+            s.put("isAyudante", "AYUDANTE".equals(role));
+        }
+        return subjects;
     }
 }

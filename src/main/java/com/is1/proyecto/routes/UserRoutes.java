@@ -5,6 +5,7 @@ import com.is1.proyecto.models.Student;
 import com.is1.proyecto.models.Teacher;
 import com.is1.proyecto.repositories.PersonRepository;
 import com.is1.proyecto.security.AuthService;
+import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
 import spark.ModelAndView;
 import spark.Request;
@@ -12,6 +13,7 @@ import spark.Response;
 import spark.template.mustache.MustacheTemplateEngine;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.*;
@@ -24,12 +26,14 @@ public class UserRoutes {
     private final AuthService authService;
     private final UserService userService;
     private final PersonRepository personRepository;
+    private final TeacherService teacherService;
     private final MustacheTemplateEngine templateEngine;
 
-    public UserRoutes(AuthService authService, UserService userService, PersonRepository personRepository) {
+    public UserRoutes(AuthService authService, UserService userService, PersonRepository personRepository, TeacherService teacherService) {
         this.authService = authService;
         this.userService = userService;
         this.personRepository = personRepository;
+        this.teacherService = teacherService;
         this.templateEngine = new MustacheTemplateEngine();
     }
 
@@ -110,8 +114,18 @@ public class UserRoutes {
         // 2. Si el usuario está logueado, añade el nombre de usuario al modelo para la plantilla.
         model.put("username", authService.getCurrentUsername(req));
 
-        // 3. Renderiza el dashboard según el rol del usuario.
+        // 3. Agregar datos específicos del rol
         String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long teacherId = req.session().attribute("teacherId");
+            if (teacherId != null) {
+                List<Map<String, Object>> assignments = teacherService.getAssignedSubjectsSimple(teacherId);
+                model.put("assignments", assignments);
+                model.put("hasAssignments", assignments != null && !assignments.isEmpty());
+            }
+        }
+
+        // 4. Renderiza el dashboard según el rol del usuario.
         String template = dashboardTemplateForRole(role);
         return new ModelAndView(model, template);
     }
@@ -172,10 +186,6 @@ public class UserRoutes {
             res.status(200); // OK.
             // Incluye el rol del usuario en la sesión
             authService.createSession(req, username, loginResult.user.getId(), loginResult.user.getRole());
-            if ("TEACHER".equals(loginResult.user.getRole())) {
-                Long teacherId = loginResult.user.getTeacherId();
-                req.session().attribute("teacherId", teacherId);
-            }
             if ("STUDENT".equals(loginResult.user.getRole())) {
                 Long studentId = loginResult.user.getStudentId();
                 if (studentId != null && studentId != 0) {
@@ -189,6 +199,16 @@ public class UserRoutes {
                 }
             }
             model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
+
+            if ("TEACHER".equals(loginResult.user.getRole())) {
+                Long teacherId = loginResult.user.getTeacherId();
+                if (teacherId != null && teacherId != 0) {
+                    List<Map<String, Object>> assignments = teacherService.getAssignedSubjectsSimple(teacherId);
+                    model.put("assignments", assignments);
+                    model.put("hasAssignments", assignments != null && !assignments.isEmpty());
+                }
+            }
+
             // Renderiza el dashboard según el rol del usuario.
             String template = dashboardTemplateForRole(loginResult.user.getRole());
             return new ModelAndView(model, template);
