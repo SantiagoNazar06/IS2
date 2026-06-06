@@ -1,5 +1,7 @@
 package com.is1.proyecto.routes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.is1.proyecto.services.EvaluationService;
 import com.is1.proyecto.services.TeacherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,9 @@ class TeacherRoutesTest {
     private TeacherService teacherService;
 
     @Mock
+    private EvaluationService evaluationService;
+
+    @Mock
     private Request req;
 
     @Mock
@@ -41,7 +46,7 @@ class TeacherRoutesTest {
 
     @BeforeEach
     void setUp() {
-        teacherRoutes = new TeacherRoutes(teacherService);
+        teacherRoutes = new TeacherRoutes(teacherService, evaluationService, new ObjectMapper());
     }
 
     // ───── Helper: invoke private method via reflection ─────

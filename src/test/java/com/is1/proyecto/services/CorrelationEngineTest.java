@@ -102,13 +102,19 @@ class CorrelationEngineTest {
                 "prerequisite_subject_id INTEGER NOT NULL, " +
                 "type VARCHAR(20) NOT NULL DEFAULT 'REGULAR')");
 
-        Base.exec("CREATE TABLE IF NOT EXISTS evaluations (" +
-                "id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        Base.exec("CREATE TABLE IF NOT EXISTS enrollments (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "student_id INTEGER NOT NULL, " +
                 "subject_id INTEGER NOT NULL, " +
-                "evaluation_date DATE NOT NULL, " +
-                "evaluation_note INTEGER, " +
-                "condition_type TEXT)");
+                "period TEXT NOT NULL, " +
+                "status TEXT NOT NULL DEFAULT 'ENROLLED')");
+
+        Base.exec("CREATE TABLE IF NOT EXISTS evaluations (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "enrollment_id INTEGER NOT NULL, " +
+                "grade DOUBLE, " +
+                "condition_type TEXT, " +
+                "evaluation_date DATE)");
     }
 
     private void insertTestData() {
@@ -133,9 +139,12 @@ class CorrelationEngineTest {
         // Estudiante
         studentId = insertStudent("12345678");
 
-        // El estudiante tiene A aprobado, pero no B
-        Base.exec("INSERT INTO evaluations (student_id, subject_id, evaluation_date, evaluation_note, condition_type) VALUES (?,?,?,?,?)",
-                studentId, subjectA, "2025-12-01", 8, "aprobado");
+        // El estudiante aprobó A (nota 8), pero no B: inscripción COMPLETED + evaluación APROBADA
+        Base.exec("INSERT INTO enrollments (student_id, subject_id, period, status) VALUES (?,?,?,?)",
+                studentId, subjectA, "2025-1", "COMPLETED");
+        long enrollA = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
+        Base.exec("INSERT INTO evaluations (enrollment_id, grade, condition_type, evaluation_date) VALUES (?,?,?,?)",
+                enrollA, 8.0, "APROBADA", "2025-12-01");
     }
 
     private long insertStudent(String dni) {

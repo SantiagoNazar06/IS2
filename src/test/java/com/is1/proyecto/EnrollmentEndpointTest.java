@@ -289,7 +289,7 @@ class EnrollmentEndpointTest {
         Base.exec("CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, id_person INTEGER NOT NULL, student_type TEXT NOT NULL)");
         Base.exec("CREATE TABLE IF NOT EXISTS subjects (id_subject INTEGER PRIMARY KEY AUTOINCREMENT, subject_name TEXT NOT NULL)");
         Base.exec("CREATE TABLE IF NOT EXISTS conditions (id INTEGER PRIMARY KEY AUTOINCREMENT, subject_id INTEGER NOT NULL, prerequisite_subject_id INTEGER NOT NULL, type VARCHAR(20) NOT NULL DEFAULT 'REGULAR')");
-        Base.exec("CREATE TABLE IF NOT EXISTS evaluations (id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER NOT NULL, subject_id INTEGER NOT NULL, evaluation_date DATE NOT NULL, evaluation_note INTEGER, condition_type TEXT)");
+        Base.exec("CREATE TABLE IF NOT EXISTS evaluations (id INTEGER PRIMARY KEY AUTOINCREMENT, enrollment_id INTEGER NOT NULL, grade DOUBLE, condition_type TEXT, evaluation_date DATE)");
         Base.exec("CREATE TABLE IF NOT EXISTS enrollments (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER NOT NULL, subject_id INTEGER NOT NULL, period TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'ENROLLED', created_at TEXT, updated_at TEXT, UNIQUE(student_id, subject_id, period))");
         Base.exec("CREATE TABLE IF NOT EXISTS teachers (id INTEGER PRIMARY KEY AUTOINCREMENT, id_persona INTEGER NOT NULL, nroLegajo VARCHAR(30) NOT NULL UNIQUE)");
         Base.exec("CREATE TABLE IF NOT EXISTS careers (id_careers INTEGER PRIMARY KEY AUTOINCREMENT, career_name TEXT NOT NULL, career_duration INTEGER NOT NULL)");

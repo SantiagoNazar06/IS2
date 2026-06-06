@@ -84,10 +84,11 @@ public class TeacherRepository {
         String sql =
             "SELECT s.id_subject AS subjectId, s.subject_name AS subjectName, " +
             "       ta.role, ta.period, " +
-            "       COUNT(e.id_evaluations) AS studentCount " +
+            "       COUNT(en.id) AS studentCount " +
             "FROM teacher_assignments ta " +
             "JOIN subjects s ON s.id_subject = ta.subject_id " +
-            "LEFT JOIN evaluations e ON e.subject_id = ta.subject_id " +
+            "LEFT JOIN enrollments en ON en.subject_id = ta.subject_id " +
+            "       AND en.status IN ('ENROLLED', 'COMPLETED') " +
             "WHERE ta.teacher_id = ? " +
             "GROUP BY ta.subject_id, ta.role, ta.period";
         List<Map> rows = Base.findAll(sql, teacherId);
@@ -100,13 +101,14 @@ public class TeacherRepository {
 
     public List<Map<String, Object>> findSubjectStudents(Long subjectId) {
         String sql =
-            "SELECT st.id AS studentId, st.student_type AS studentType, " +
+            "SELECT en.id AS enrollmentId, st.id AS studentId, st.student_type AS studentType, " +
             "       p.firstName, p.lastName, p.dni, p.email, " +
-            "       e.evaluation_note AS grade, e.evaluation_date AS gradeDate " +
-            "FROM evaluations e " +
-            "JOIN students st ON st.id = e.student_id " +
+            "       e.grade AS grade, e.condition_type AS condition, e.evaluation_date AS gradeDate " +
+            "FROM enrollments en " +
+            "JOIN students st ON st.id = en.student_id " +
             "JOIN persons p ON p.id = st.id_person " +
-            "WHERE e.subject_id = ?";
+            "LEFT JOIN evaluations e ON e.enrollment_id = en.id " +
+            "WHERE en.subject_id = ? AND en.status IN ('ENROLLED', 'COMPLETED')";
         List<Map> rows = Base.findAll(sql, subjectId);
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map row : rows) {

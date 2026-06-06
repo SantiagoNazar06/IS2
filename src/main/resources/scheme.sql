@@ -83,14 +83,11 @@ CREATE TABLE enrollments (
 DROP TABLE IF EXISTS evaluations;
 
 CREATE TABLE evaluations (
-    id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER NOT NULL,
-    subject_id INTEGER NOT NULL,
-    evaluation_date DATE NOT NULL,
-    evaluation_note INTEGER,
-    condition_type TEXT CHECK(condition_type IN('aprobado', 'regular', 'desaprobado')),
-    FOREIGN KEY (student_id) REFERENCES students(id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    enrollment_id INTEGER NOT NULL UNIQUE REFERENCES enrollments(id),
+    grade DECIMAL(4,2) CHECK(grade IS NULL OR (grade >= 0 AND grade <= 10)),
+    condition_type TEXT NOT NULL CHECK(condition_type IN('REGULAR', 'APROBADA', 'PROMOCION')),
+    evaluation_date DATE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 

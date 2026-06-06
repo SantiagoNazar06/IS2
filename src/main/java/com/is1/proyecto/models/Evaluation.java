@@ -36,4 +36,18 @@ public class Evaluation extends Model {
         set("enrollment_id", enrollment_id);
     }
 
+    /**
+     * Condición académica del estudiante en la materia:
+     * REGULAR (aprobó parciales, sin final), APROBADA (aprobó el final)
+     * o PROMOCION (promocionó, sin rendir final).
+     * El alumno permanece REGULAR hasta que aprueba; no se registra "desaprobada".
+     */
+    public String getCondition(){
+        return getString("condition_type");
+    }
+
+    public void setCondition(String condition){
+        set("condition_type", condition);
+    }
+
 }

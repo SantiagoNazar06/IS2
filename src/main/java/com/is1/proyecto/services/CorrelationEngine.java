@@ -2,9 +2,10 @@ package com.is1.proyecto.services;
 
 import com.is1.proyecto.models.Condition;
 import com.is1.proyecto.models.ConditionType;
-import com.is1.proyecto.models.Evaluation;
 import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.services.ValidationResult.MissingPrerequisite;
+
+import org.javalite.activejdbc.Base;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,18 @@ public class CorrelationEngine {
         for (Condition prerequisite : prerequisites) {
             Integer prereqSubjectId = prerequisite.getPrerequisiteSubjectId();
             ConditionType conditionType = prerequisite.getType();
-            // REGULAR -> "regular", APROBADA -> "aprobado" (matches evaluations.condition_type)
-            String requiredCondition = conditionType == ConditionType.APROBADA ? "aprobado" : "regular";
 
-            long passed = Evaluation.count(
-                "student_id = ? AND subject_id = ? AND condition_type = ?",
-                studentId, prereqSubjectId, requiredCondition
-            );
+            // La correlativa se resuelve uniendo evaluations -> enrollments y mirando la condición:
+            //   - APROBADA: la previa debe estar APROBADA o PROMOCION (materia cerrada con nota).
+            //   - REGULAR:  alcanza con REGULAR, APROBADA o PROMOCION.
+            String inClause = (conditionType == ConditionType.APROBADA)
+                ? "('APROBADA', 'PROMOCION')"
+                : "('REGULAR', 'APROBADA', 'PROMOCION')";
+            String sql = "SELECT COUNT(*) FROM evaluations ev "
+                + "JOIN enrollments en ON en.id = ev.enrollment_id "
+                + "WHERE en.student_id = ? AND en.subject_id = ? "
+                + "AND ev.condition_type IN " + inClause;
+            long passed = ((Number) Base.firstCell(sql, studentId, prereqSubjectId)).longValue();
 
             if (passed == 0) {
                 Subject requiredSubject = Subject.findById(prereqSubjectId);
