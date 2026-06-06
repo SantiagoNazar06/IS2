@@ -10,6 +10,7 @@ import com.is1.proyecto.routes.StudentRoutes;
 import com.is1.proyecto.routes.SubjectRoutes;
 import com.is1.proyecto.routes.StudyPlanRoutes;
 import com.is1.proyecto.routes.TeacherRoutes;
+import com.is1.proyecto.routes.UserApiRoutes;
 import com.is1.proyecto.routes.UserRoutes;
 import com.is1.proyecto.security.AuthService;
 import com.is1.proyecto.security.SecurityFilter;
@@ -99,5 +100,6 @@ public class App {
         new EvaluationRoutes(evaluationService).register();
         new StudyPlanRoutes(studyPlanService).register();
         new SubjectRoutes(subjectService, conditionService).register();
+        new UserApiRoutes(authService, userService, objectMapper).register();
     }
 }

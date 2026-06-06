@@ -1,5 +1,7 @@
 package com.is1.proyecto.services;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -135,5 +137,100 @@ public class UserService {
                 return "{\"error\": \"Error interno al registrar usuario: " + e.getMessage() + "\"}";
             }
         }
+    }
+
+    // ========================================================================
+    // Métodos REST para UserApiRoutes
+    // ========================================================================
+
+    /**
+     * Retorna todos los usuarios como lista de mapas, excluyendo el campo password.
+     */
+    public List<Map<String, Object>> listAllUsers() {
+        List<User> users = User.findAll().load();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (User u : users) {
+            result.add(userToSafeMap(u));
+        }
+        return result;
+    }
+
+    /**
+     * Retorna un usuario por ID como mapa seguro (sin password), o null si no existe.
+     */
+    public Map<String, Object> getUserById(Long id) {
+        User user = User.findById(id);
+        if (user == null) return null;
+        return userToSafeMap(user);
+    }
+
+    /**
+     * Crea un usuario desde REST con todos los campos opcionales.
+     */
+    public User createUserRest(String username, String password, String role, Long personId) {
+        User user = new User();
+        user.setName(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(role != null && !role.isEmpty() ? role : "STUDENT");
+        if (personId != null) {
+            if ("TEACHER".equals(role)) {
+                user.setTeacherId(personId);
+            } else {
+                user.setStudentId(personId);
+            }
+        }
+        user.saveIt();
+        return user;
+    }
+
+    /**
+     * Actualiza parcialmente un usuario. Solo modifica campos no nulos.
+     * Retorna el usuario actualizado, o null si no existe.
+     */
+    public User updateUserRest(Long id, String username, String password, String role, Long personId) {
+        User user = User.findById(id);
+        if (user == null) return null;
+
+        if (username != null && !username.isEmpty()) {
+            user.setName(username);
+        }
+        if (password != null && !password.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+        if (role != null && !role.isEmpty()) {
+            user.setRole(role);
+        }
+        if (personId != null) {
+            if ("TEACHER".equals(role != null ? role : user.getRole())) {
+                user.setTeacherId(personId);
+            } else {
+                user.setStudentId(personId);
+            }
+        }
+        user.saveIt();
+        return user;
+    }
+
+    /**
+     * Elimina un usuario por ID. Retorna true si existia, false si no.
+     */
+    public boolean deleteUserRest(Long id) {
+        User user = User.findById(id);
+        if (user == null) return false;
+        user.delete();
+        return true;
+    }
+
+    /**
+     * Convierte un User a un mapa plano excluyendo el password.
+     */
+    private Map<String, Object> userToSafeMap(User user) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("id", user.getId());
+        map.put("username", user.getName());
+        map.put("role", user.getRole());
+        map.put("teacherId", user.getTeacherId());
+        map.put("studentId", user.getStudentId());
+        return map;
     }
 }

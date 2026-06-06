@@ -42,6 +42,7 @@ public class SecurityConfig {
         PROTECTED_ROUTES.put("/admin/assignments", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/admin", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/add_users", Set.of(Role.ADMIN));
+        PROTECTED_ROUTES.put("/api/users", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/delete", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/update", Set.of(Role.ADMIN));
         PROTECTED_ROUTES.put("/user/new", Set.of(Role.ADMIN));
