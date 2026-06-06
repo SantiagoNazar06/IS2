@@ -93,8 +93,8 @@ public class App {
         // Cada grupo de rutas se registra con sus servicios correspondientes
         new UserRoutes(authService, userService, personRepository, teacherService).register();
         new AssignmentRoutes(teacherService).register();
-        new TeacherRoutes(teacherService).register();
         ObjectMapper objectMapper = new ObjectMapper();
+        new TeacherRoutes(teacherService, evaluationService, objectMapper).register();
         new StudentRoutes(studentService, careerService, subjectService, objectMapper).register();
         new CareerRoutes(careerService).register();
         new EvaluationRoutes(evaluationService).register();

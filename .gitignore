@@ -36,3 +36,6 @@ target/
 .project
 .settings/
 
+# Claude Code
+.claude/
+CLAUDE.md

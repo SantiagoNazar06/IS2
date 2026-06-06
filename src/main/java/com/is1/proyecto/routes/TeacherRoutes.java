@@ -1,5 +1,8 @@
 package com.is1.proyecto.routes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.is1.proyecto.models.Evaluation;
+import com.is1.proyecto.services.EvaluationService;
 import com.is1.proyecto.services.TeacherService;
 import spark.ModelAndView;
 import spark.Request;
@@ -19,10 +22,14 @@ import static spark.Spark.*;
 public class TeacherRoutes {
 
     private final TeacherService teacherService;
+    private final EvaluationService evaluationService;
+    private final ObjectMapper objectMapper;
     private final MustacheTemplateEngine templateEngine;
 
-    public TeacherRoutes(TeacherService teacherService) {
+    public TeacherRoutes(TeacherService teacherService, EvaluationService evaluationService, ObjectMapper objectMapper) {
         this.teacherService = teacherService;
+        this.evaluationService = evaluationService;
+        this.objectMapper = objectMapper;
         this.templateEngine = new MustacheTemplateEngine();
     }
 
@@ -40,6 +47,7 @@ public class TeacherRoutes {
         get("/teachers/:id/subjects", this::showTeacherSubjects, templateEngine);
         get("/teachers/:id/grades", this::showTeacherGrades, templateEngine);
         get("/teachers/:id/subjects/:subjectId/students", this::showSubjectStudents, templateEngine);
+        post("/teachers/:id/grades", this::handleRegisterGrade);
     }
 
     private ModelAndView listTeachers(Request req, Response res) {
@@ -260,10 +268,75 @@ public class TeacherRoutes {
     }
 
     /**
-     * GET /teachers/:id/subjects/:subjectId/students
+     * POST /teachers/:id/grades
      * <p>
-     * Retorna el listado de alumnos inscriptos en una materia,
-     * verificando que el docente esté asignado a ella.
+     * Endpoint REST JSON (issue #24) para que un docente cargue la condición/nota de
+     * una inscripción. Cuerpo esperado:
+     * {@code {"enrollmentId": ..., "condition": "REGULAR|APROBADA|PROMOCION", "grade": ...}}.
+     * REGULAR no lleva nota; APROBADA y PROMOCION requieren nota &gt;= 5.
      * </p>
+     * <p>Códigos: 201 creada · 200 transición REGULAR→final · 400 datos inválidos ·
+     * 403 docente no asignado · 404 inscripción inexistente · 409 condición ya final.</p>
      */
+    private Object handleRegisterGrade(Request req, Response res) {
+        res.type("application/json");
+
+        long teacherId;
+        try {
+            teacherId = Long.parseLong(req.params(":id"));
+        } catch (NumberFormatException e) {
+            res.status(400);
+            return toJson(Map.of("error", "ID de docente inválido."));
+        }
+
+        // Un TEACHER solo puede cargar notas para sí mismo; ADMIN puede para cualquiera.
+        String role = req.session().attribute("userRole");
+        if ("TEACHER".equals(role)) {
+            Long sessionTeacherId = req.session().attribute("teacherId");
+            if (sessionTeacherId == null || sessionTeacherId != teacherId) {
+                res.status(403);
+                return toJson(Map.of("error", "No puede cargar calificaciones para otro docente."));
+            }
+        }
+
+        Integer enrollmentId;
+        String condition;
+        Double grade;
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = objectMapper.readValue(req.body(), Map.class);
+            enrollmentId = body.get("enrollmentId") != null ? ((Number) body.get("enrollmentId")).intValue() : null;
+            condition = body.get("condition") != null ? body.get("condition").toString() : null;
+            grade = body.get("grade") != null ? ((Number) body.get("grade")).doubleValue() : null;
+        } catch (Exception e) {
+            res.status(400);
+            return toJson(Map.of("error", "Cuerpo inválido. Se espera JSON {\"enrollmentId\": ..., \"condition\": \"REGULAR|APROBADA|PROMOCION\", \"grade\": ...}."));
+        }
+
+        EvaluationService.GradeResult result =
+            evaluationService.registerTeacherGrade(teacherId, enrollmentId, condition, grade, teacherService);
+
+        res.status(result.statusCode);
+        if (!result.success) {
+            return toJson(Map.of("error", result.error));
+        }
+
+        Evaluation eval = result.evaluation;
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", eval.getEvaluationId());
+        payload.put("enrollmentId", eval.getEvaluationEnrollementId());
+        payload.put("condition", eval.getCondition());
+        payload.put("grade", eval.getEvaluationGrade());
+        payload.put("evaluationDate", eval.getEvaluationDate() != null ? eval.getEvaluationDate().toString() : null);
+        payload.put("enrollmentStatus", result.enrollmentStatus);
+        return toJson(payload);
+    }
+
+    private String toJson(Object data) {
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            return "{\"error\":\"Error de serialización\"}";
+        }
+    }
 }

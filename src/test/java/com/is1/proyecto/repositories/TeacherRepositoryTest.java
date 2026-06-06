@@ -82,13 +82,18 @@ class TeacherRepositoryTest {
                 otherPersonId, "REGULAR");
         long studentId = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
 
-        Base.exec("INSERT INTO evaluations (student_id, subject_id, evaluation_date, evaluation_note, condition_type) VALUES (?,?,?,?,?)",
-                studentId, subjectId, "2025-06-01", 8, "aprobado");
+        // Inscripción del estudiante a la materia + evaluación (nota 8)
+        Base.exec("INSERT INTO enrollments (student_id, subject_id, period, status) VALUES (?,?,?,?)",
+                studentId, subjectId, "2025-1", "COMPLETED");
+        long enrollmentId = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
+        Base.exec("INSERT INTO evaluations (enrollment_id, grade, condition_type, evaluation_date) VALUES (?,?,?,?)",
+                enrollmentId, 8.0, "APROBADA", "2025-06-01");
     }
 
     @AfterEach
     void cleanDatabase() {
         Base.exec("DELETE FROM evaluations");
+        Base.exec("DELETE FROM enrollments");
         Base.exec("DELETE FROM teacher_assignments");
         Base.exec("DELETE FROM subjects");
         Base.exec("DELETE FROM students");
@@ -101,6 +106,7 @@ class TeacherRepositoryTest {
     void tearDown() {
         try { Base.open("org.sqlite.JDBC", DB_URL, "", "");
             Base.exec("DROP TABLE IF EXISTS evaluations");
+            Base.exec("DROP TABLE IF EXISTS enrollments");
             Base.exec("DROP TABLE IF EXISTS teacher_assignments");
             Base.exec("DROP TABLE IF EXISTS subjects");
             Base.exec("DROP TABLE IF EXISTS students");
@@ -345,13 +351,18 @@ class TeacherRepositoryTest {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "id_person INTEGER NOT NULL, " +
                 "student_type TEXT NOT NULL)");
-        Base.exec("CREATE TABLE IF NOT EXISTS evaluations (" +
-                "id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        Base.exec("CREATE TABLE IF NOT EXISTS enrollments (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "student_id INTEGER NOT NULL, " +
                 "subject_id INTEGER NOT NULL, " +
-                "evaluation_date DATE NOT NULL, " +
-                "evaluation_note INTEGER, " +
-                "condition_type TEXT)");
+                "period TEXT NOT NULL, " +
+                "status TEXT NOT NULL DEFAULT 'ENROLLED')");
+        Base.exec("CREATE TABLE IF NOT EXISTS evaluations (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "enrollment_id INTEGER NOT NULL, " +
+                "grade DOUBLE, " +
+                "condition_type TEXT, " +
+                "evaluation_date DATE)");
         Base.exec("CREATE TABLE IF NOT EXISTS teacher_assignments (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "teacher_id INTEGER NOT NULL, " +
