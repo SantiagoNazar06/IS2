@@ -3,6 +3,7 @@ package com.is1.proyecto.security;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ public class SecurityConfig {
     // ==================== RUTAS PROTEGIDAS POR ROL ====================
     // clave = prefijo de ruta, valor = roles que pueden acceder
 
-    public static final Map<String, Set<Role>> PROTECTED_ROUTES = new HashMap<>();
+    public static final Map<String, Set<Role>> PROTECTED_ROUTES = new LinkedHashMap<>();
 
     static {
         // Rutas administrativas - solo ADMIN
@@ -58,6 +59,8 @@ public class SecurityConfig {
         
         // Rutas de estudiantes - ADMIN o TEACHER (listado)
         PROTECTED_ROUTES.put("/students", Set.of(Role.ADMIN, Role.TEACHER));
+        // Sub-rutas de estudiantes (enrollments, etc.) — ADMIN o STUDENT
+        PROTECTED_ROUTES.put("/students/", Set.of(Role.ADMIN, Role.STUDENT));
         PROTECTED_ROUTES.put("/student", Set.of(Role.ADMIN, Role.STUDENT));
 
         // Rutas de inscripciones - ADMIN o STUDENT
@@ -76,7 +79,7 @@ public class SecurityConfig {
         PROTECTED_ROUTES.put("/subjects", Set.of(Role.ADMIN, Role.TEACHER));
         PROTECTED_ROUTES.put("/subject", Set.of(Role.ADMIN, Role.TEACHER));
         
-        // Rutas de planes de estudio - todos los roles
+        // Rutas de planes de estudio - ADMIN gestiona, TEACHER/STUDENT solo ven JSON
         PROTECTED_ROUTES.put("/study-plans", Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT));
         PROTECTED_ROUTES.put("/study-plan", Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT));
         
@@ -134,6 +137,8 @@ public class SecurityConfig {
 
     /**
      * Obtiene los roles requeridos para una ruta.
+     * Usa el prefijo más largo que matchee (longest prefix match)
+     * para permitir rutas más específicas con diferentes roles.
      * 
      * @param path Ruta a verificar
      * @return Set de roles permitidos, o null si la ruta no está protegida por rol específico
@@ -148,14 +153,32 @@ public class SecurityConfig {
             path = "/" + path;
         }
         
-        // Buscar coincidencia exacta
+        String bestMatch = null;
+        Set<Role> bestRoles = null;
+        
         for (Map.Entry<String, Set<Role>> entry : PROTECTED_ROUTES.entrySet()) {
             String protectedPath = entry.getKey();
             
-            // Coincidencia exacta o prefijo
-            if (path.equals(protectedPath) || path.startsWith(protectedPath + "/")) {
+            // Construir prefijo para matching:
+            // - Si protectedPath termina en "/", usarlo directamente
+            // - Si no, agregar "/" al final (para evitar falsos positivos)
+            String matchPrefix = protectedPath.endsWith("/") ? protectedPath : protectedPath + "/";
+            
+            if (path.equals(protectedPath)) {
+                // Coincidencia exacta → siempre gana
                 return entry.getValue();
+            } else if (path.startsWith(matchPrefix)) {
+                // Coincidencia por prefijo → elegir el más largo
+                if (bestMatch == null || protectedPath.length() > bestMatch.length()) {
+                    bestMatch = protectedPath;
+                    bestRoles = entry.getValue();
+                }
             }
+        }
+        
+        // Si encontramos match por prefijo, devolver el más específico
+        if (bestRoles != null) {
+            return bestRoles;
         }
         
         // Ruta protegida pero sin restricción de rol específica (cualquier autenticado)

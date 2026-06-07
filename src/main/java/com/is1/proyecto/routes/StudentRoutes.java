@@ -47,6 +47,7 @@ public class StudentRoutes {
         post("/update_student/:id", this::handleUpdateStudent);
         post("/delete_student/:id", this::handleDeleteStudent);
         post("/enrollments/student/:id", this::handleEnroll);
+        delete("/students/:id/enrollments/:enrollmentId", this::handleCancelEnrollment);
     }
 
     private ModelAndView showStudentForm(Request req, Response res) {
@@ -299,6 +300,49 @@ public class StudentRoutes {
                     "status", "ENROLLED",
                     "createdAt", enrollment.getString("created_at"))));
 
+        } catch (Exception e) {
+            res.status(500);
+            return objectMapper.writeValueAsString(
+                Map.of("error", "Error interno del servidor: " + e.getMessage()));
+        }
+    }
+
+    // DELETE /students/:id/enrollments/:enrollmentId — cancelar inscripción
+    private Object handleCancelEnrollment(Request req, Response res) throws Exception {
+        res.type("application/json");
+        try {
+            // 1. Parsear IDs
+            Long studentId = Long.parseLong(req.params(":id"));
+            Integer enrollmentId = Integer.parseInt(req.params(":enrollmentId"));
+
+            // 2. Verificar autorización (AC-4)
+            String role = req.session().attribute("userRole");
+            if ("STUDENT".equals(role)) {
+                Long sessionStudentId = req.session().attribute("studentId");
+                if (sessionStudentId == null || !sessionStudentId.equals(studentId)) {
+                    res.status(403);
+                    return objectMapper.writeValueAsString(
+                        Map.of("error", "No autorizado: solo puedes cancelar tus propias inscripciones."));
+                }
+            }
+
+            // 3. Delegar al servicio
+            StudentService.CancelEnrollmentResult result =
+                studentService.cancelEnrollment(studentId, enrollmentId);
+
+            // 4. Responder según resultado
+            if (result.success) {
+                res.status(204);
+                return "";
+            }
+
+            res.status(result.statusCode);
+            return objectMapper.writeValueAsString(Map.of("error", result.message));
+
+        } catch (NumberFormatException e) {
+            res.status(400);
+            return objectMapper.writeValueAsString(
+                Map.of("error", "ID de estudiante o inscripción inválido."));
         } catch (Exception e) {
             res.status(500);
             return objectMapper.writeValueAsString(

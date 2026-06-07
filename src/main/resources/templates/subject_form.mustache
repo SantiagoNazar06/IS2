@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{#isEdit}}Editar{{/isEdit}}{{^isEdit}}Nueva{{/isEdit}} Materia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">
+            {{#isEdit}}Editar Materia{{/isEdit}}
+            {{^isEdit}}Nueva Materia{{/isEdit}}
+        </h1>
+
+        <form method="POST" action="{{#isEdit}}/subjects/manage/{{subject.subjectId}}/update{{/isEdit}}{{^isEdit}}/subjects/manage/create{{/isEdit}}"
+              class="space-y-4">
+
+            <!-- Codigo -->
+            <div>
+                <label for="code" class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                <input type="text" id="code" name="code" required
+                       value="{{#subject}}{{code}}{{/subject}}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Ej: MAT101">
+            </div>
+
+            <!-- Nombre -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input type="text" id="name" name="name" required
+                       value="{{#subject}}{{subjectName}}{{/subject}}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Ej: Matemática I">
+            </div>
+
+            <!-- Plan de Estudio (opcional) -->
+            <div>
+                <label for="studyPlanId" class="block text-sm font-medium text-gray-700 mb-1">Plan de Estudio <span class="text-gray-400 font-normal">(opcional)</span></label>
+                <select id="studyPlanId" name="studyPlanId"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Sin plan de estudio</option>
+                    {{#studyPlans}}
+                    <option value="{{id}}" {{#isSelected}}selected{{/isSelected}}>{{careerName}} - {{name}} ({{year}})</option>
+                    {{/studyPlans}}
+                    {{^studyPlans}}
+                    <option value="" disabled>— No hay planes de estudio disponibles. Cree una carrera primero —</option>
+                    {{/studyPlans}}
+                </select>
+                <p class="text-xs text-gray-400 mt-1">Puede crear una materia sin asignarle un plan de estudio.</p>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex items-center justify-between pt-4">
+                <a href="/subjects/manage"
+                   class="text-gray-600 hover:underline text-sm">Cancelar</a>
+                <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    {{#isEdit}}Guardar Cambios{{/isEdit}}
+                    {{^isEdit}}Crear Materia{{/isEdit}}
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

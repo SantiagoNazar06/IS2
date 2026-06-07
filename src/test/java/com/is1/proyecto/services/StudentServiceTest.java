@@ -2,6 +2,8 @@ package com.is1.proyecto.services;
 
 import com.is1.proyecto.dto.StudentListDTO;
 import com.is1.proyecto.ports.out.StudentRepositoryInterface;
+import com.is1.proyecto.repositories.EnrollmentRepository;
+import com.is1.proyecto.repositories.EvaluationRepository;
 import com.is1.proyecto.security.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,11 +27,17 @@ class StudentServiceTest {
     @Mock
     private StudentRepositoryInterface repository;
 
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+
+    @Mock
+    private EvaluationRepository evaluationRepository;
+
     private StudentService studentService;
 
     @BeforeEach
     void setUp() {
-        studentService = new StudentService(repository);
+        studentService = new StudentService(repository, enrollmentRepository, evaluationRepository);
     }
 
     @Test

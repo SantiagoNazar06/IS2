@@ -1,0 +1,180 @@
+/* Dark Mode Overrides — IS2 */
+/* Applies when <html class="dark"> */
+
+/* ========== Backgrounds ========== */
+html.dark .bg-white { background-color: #1f2937; }
+html.dark .bg-gray-50 { background-color: #111827; }
+html.dark .bg-gray-100 { background-color: #111827; }
+html.dark .bg-gray-200 { background-color: #374151; }
+
+html.dark .bg-blue-50 { background-color: rgba(30, 58, 138, 0.3); }
+html.dark .bg-blue-100 { background-color: rgba(30, 58, 138, 0.4); }
+html.dark .bg-blue-500 { background-color: #2563eb; }
+html.dark .bg-blue-600 { background-color: #3b82f6; }
+
+html.dark .bg-indigo-50 { background-color: rgba(55, 48, 163, 0.3); }
+html.dark .bg-indigo-600 { background-color: #6366f1; }
+
+html.dark .bg-green-50 { background-color: rgba(6, 78, 59, 0.3); }
+html.dark .bg-green-100 { background-color: rgba(6, 78, 59, 0.4); }
+html.dark .bg-green-600 { background-color: #22c55e; }
+
+html.dark .bg-red-50 { background-color: rgba(127, 29, 29, 0.3); }
+html.dark .bg-red-100 { background-color: rgba(127, 29, 29, 0.4); }
+html.dark .bg-red-500 { background-color: #ef4444; }
+html.dark .bg-red-600 { background-color: #f87171; }
+
+html.dark .bg-teal-50 { background-color: rgba(19, 78, 74, 0.3); }
+html.dark .bg-teal-600 { background-color: #14b8a6; }
+
+html.dark .bg-cyan-50 { background-color: rgba(21, 94, 117, 0.3); }
+html.dark .bg-cyan-600 { background-color: #06b6d4; }
+
+html.dark .bg-amber-50 { background-color: rgba(120, 53, 15, 0.3); }
+html.dark .bg-amber-600 { background-color: #d97706; }
+
+html.dark .bg-purple-50 { background-color: rgba(88, 28, 135, 0.3); }
+html.dark .bg-purple-600 { background-color: #a855f7; }
+
+/* ========== Text Colors ========== */
+html.dark .text-gray-300 { color: #d1d5db; }
+html.dark .text-gray-400 { color: #9ca3af; }
+html.dark .text-gray-500 { color: #9ca3af; }
+html.dark .text-gray-600 { color: #d1d5db; }
+html.dark .text-gray-700 { color: #e5e7eb; }
+html.dark .text-gray-800 { color: #f3f4f6; }
+html.dark .text-gray-900 { color: #f9fafb; }
+
+html.dark .text-blue-600 { color: #60a5fa; }
+html.dark .text-blue-700 { color: #93c5fd; }
+
+html.dark .text-indigo-600 { color: #818cf8; }
+html.dark .text-indigo-700 { color: #a5b4fc; }
+
+html.dark .text-green-700 { color: #4ade80; }
+
+html.dark .text-red-600 { color: #f87171; }
+html.dark .text-red-700 { color: #fca5a5; }
+
+html.dark .text-teal-700 { color: #2dd4bf; }
+html.dark .text-cyan-700 { color: #22d3ee; }
+html.dark .text-purple-600 { color: #a855f7; }
+html.dark .text-purple-700 { color: #c084fc; }
+
+html.dark .text-amber-700 { color: #fbbf24; }
+
+html.dark .text-green-600 { color: #22c55e; }
+
+html.dark .text-yellow-600 { color: #eab308; }
+html.dark .text-yellow-800 { color: #fef08a; }
+
+/* ========== Border Colors ========== */
+html.dark .border-gray-200 { border-color: #374151; }
+html.dark .border-gray-300 { border-color: #4b5563; }
+
+html.dark .border-blue-200 { border-color: rgba(96, 165, 250, 0.3); }
+html.dark .border-blue-400 { border-color: rgba(96, 165, 250, 0.5); }
+html.dark .border-blue-500 { border-color: #3b82f6; }
+
+html.dark .border-indigo-200 { border-color: rgba(129, 140, 248, 0.3); }
+
+html.dark .border-green-200 { border-color: rgba(74, 222, 128, 0.3); }
+html.dark .border-green-400 { border-color: rgba(74, 222, 128, 0.5); }
+
+html.dark .border-red-200 { border-color: rgba(248, 113, 113, 0.3); }
+html.dark .border-red-400 { border-color: rgba(248, 113, 113, 0.5); }
+
+html.dark .border-teal-200 { border-color: rgba(45, 212, 191, 0.3); }
+html.dark .border-cyan-200 { border-color: rgba(34, 211, 238, 0.3); }
+html.dark .border-amber-200 { border-color: rgba(251, 191, 36, 0.3); }
+
+html.dark .border-purple-200 { border-color: rgba(192, 132, 252, 0.3); }
+
+/* ========== Hover States ========== */
+html.dark .hover\:bg-gray-50:hover { background-color: #374151; }
+html.dark .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+html.dark .hover\:bg-indigo-700:hover { background-color: #4338ca; }
+html.dark .hover\:bg-green-700:hover { background-color: #15803d; }
+html.dark .hover\:bg-red-700:hover { background-color: #b91c1c; }
+html.dark .hover\:bg-red-600:hover { background-color: #dc2626; }
+html.dark .hover\:bg-teal-700:hover { background-color: #0f766e; }
+html.dark .hover\:bg-cyan-700:hover { background-color: #0e7490; }
+html.dark .hover\:bg-amber-700:hover { background-color: #92400e; }
+
+html.dark .hover\:bg-purple-700:hover { background-color: #7e22ce; }
+
+html.dark .hover\:text-blue-800:hover { color: #93c5fd; }
+html.dark .hover\:text-gray-800:hover { color: #f3f4f6; }
+html.dark .hover\:text-indigo-800:hover { color: #c7d2fe; }
+html.dark .hover\:text-red-800:hover { color: #fca5a5; }
+html.dark .hover\:text-green-800:hover { color: #86efac; }
+html.dark .hover\:text-purple-800:hover { color: #d8b4fe; }
+html.dark .hover\:text-yellow-800:hover { color: #fef08a; }
+
+/* ========== Focus Rings ========== */
+html.dark .focus\:ring-blue-500:focus { --tw-ring-color: #3b82f6; }
+html.dark .focus\:ring-indigo-500:focus { --tw-ring-color: #6366f1; }
+html.dark .focus\:ring-purple-500:focus { --tw-ring-color: #a855f7; }
+
+/* ========== Table row hover ========== */
+html.dark .hover\:bg-gray-50:hover { background-color: #374151; }
+
+/* ========== Cards/containers inside colored sections ========== */
+html.dark .bg-blue-50 .bg-white,
+html.dark .bg-indigo-50 .bg-white,
+html.dark .bg-green-50 .bg-white,
+html.dark .bg-red-50 .bg-white,
+html.dark .bg-teal-50 .bg-white,
+html.dark .bg-cyan-50 .bg-white,
+html.dark .bg-purple-50 .bg-white {
+  background-color: #1f2937;
+}
+
+/* ========== Shadow adjustments ========== */
+html.dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3); }
+html.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3); }
+html.dark .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2); }
+
+/* ========== Transitions for smooth theme switching ========== */
+html.dark,
+html.dark * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ========== Toggle button hover effect ========== */
+#darkModeToggle:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+/* ========== Table header in dark mode ========== */
+html.dark .bg-gray-200 { background-color: #374151; }
+html.dark .uppercase.text-gray-700.text-sm { color: #d1d5db; }
+
+/* ========== Focus ring offset ========== */
+html.dark .focus\:ring-offset-2:focus { --tw-ring-offset-color: #1f2937; }
+
+/* ========== Focus border (input fields) ========== */
+html.dark .focus\:border-blue-500:focus { border-color: #3b82f6; }
+
+/* ========== Role badges (assignments) ========== */
+html.dark .bg-yellow-100 { background-color: rgba(113, 63, 18, 0.3); }
+html.dark .text-yellow-800 { color: #fbbf24; }
+
+/* ========== Table dividers ========== */
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+/* ========== Admin dashboard: cards con mismo color en dark mode ========== */
+/* Las 3 primeras cards del panel admin usan bg-indigo-50 → las diferenciamos por nth-child */
+html.dark .grid.grid-cols-1.gap-6.mb-8 > .bg-indigo-50:nth-child(1) {
+  background-color: rgba(55, 48, 163, 0.45);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+html.dark .grid.grid-cols-1.gap-6.mb-8 > .bg-indigo-50:nth-child(2) {
+  background-color: rgba(76, 29, 149, 0.4);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+html.dark .grid.grid-cols-1.gap-6.mb-8 > .bg-indigo-50:nth-child(3) {
+  background-color: rgba(30, 58, 138, 0.4);
+  border-color: rgba(59, 130, 246, 0.4);
+}

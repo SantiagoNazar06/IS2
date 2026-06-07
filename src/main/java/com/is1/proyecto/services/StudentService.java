@@ -1,11 +1,16 @@
 package com.is1.proyecto.services;
 
+import java.util.List;
+
 import com.is1.proyecto.dto.StudentListDTO;
+import com.is1.proyecto.models.Enrollment;
+import com.is1.proyecto.models.EnrollmentStatus;
+import com.is1.proyecto.models.Evaluation;
 import com.is1.proyecto.models.Person;
 import com.is1.proyecto.models.Student;
 import com.is1.proyecto.ports.out.StudentRepositoryInterface;
-
-import java.util.List;
+import com.is1.proyecto.repositories.EnrollmentRepository;
+import com.is1.proyecto.repositories.EvaluationRepository;
 
 /**
  * Servicio para operaciones relacionadas con estudiantes.
@@ -13,13 +18,13 @@ import java.util.List;
 public class StudentService {
 
     private final StudentRepositoryInterface repository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final EvaluationRepository evaluationRepository; 
 
-    public StudentService() {
-        this.repository = null;
-    }
-
-    public StudentService(StudentRepositoryInterface repository) {
+    public StudentService(StudentRepositoryInterface repository, EnrollmentRepository enrollmentRepository, EvaluationRepository evaluationRepository) {
         this.repository = repository;
+        this.enrollmentRepository = enrollmentRepository;
+        this.evaluationRepository = evaluationRepository;
     }
 
     /**
@@ -221,5 +226,67 @@ public class StudentService {
             e.printStackTrace();
             return StudentRegisterResult.errorList("Error interno al eliminar el estudiante.");
         }
+    }
+
+    /**
+     * Cancela una inscripción (soft delete → status CANCELLED).
+     * Solo si NO tiene calificaciones cargadas.
+     *
+     * @param studentId    ID del estudiante (dueño de la inscripción)
+     * @param enrollmentId ID de la inscripción a cancelar
+     * @return CancelEnrollmentResult con el resultado
+     */
+    public CancelEnrollmentResult cancelEnrollment(Long studentId, Integer enrollmentId) {
+        // 1. Buscar enrollment
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId);
+        if (enrollment == null) {
+            return CancelEnrollmentResult.notFound();
+        }
+
+        // 2. Verificar que pertenezca al estudiante
+        if (!enrollment.getStudentId().equals(studentId)) {
+            return CancelEnrollmentResult.notFound();
+        }
+
+        // 3. Verificar que no tenga calificaciones
+        Evaluation existingEval = evaluationRepository.findByEnrollmentId(enrollmentId);
+        if (existingEval != null) {
+            return CancelEnrollmentResult.conflict(
+                "No se puede cancelar la inscripción porque ya tiene calificaciones cargadas.");
+        }
+
+        // 4. Soft delete: cambiar status a CANCELLED
+        enrollmentRepository.updateStatus(enrollmentId, EnrollmentStatus.CANCELLED);
+
+        return CancelEnrollmentResult.ok();
+    }
+
+    public static class CancelEnrollmentResult{
+        public final boolean success;
+        public final int statusCode;
+        public final String message;
+
+        private CancelEnrollmentResult(boolean success, int statusCode, String messsage){
+            this.success = success;
+            this.statusCode = statusCode;
+            this.message = messsage;
+        }
+
+        public static CancelEnrollmentResult ok() {
+            return new CancelEnrollmentResult(true, 204, null);
+        }
+
+        public static CancelEnrollmentResult notFound() {
+            return new CancelEnrollmentResult(false, 404, "Enrollment no encontrado");
+        }
+
+        public static CancelEnrollmentResult forbidden(String message) {
+            return new CancelEnrollmentResult(false, 403, message);
+        }
+
+        public static CancelEnrollmentResult conflict(String message) {
+            return new CancelEnrollmentResult(false, 409, message);
+        }
+
     }
 }

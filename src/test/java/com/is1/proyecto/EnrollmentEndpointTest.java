@@ -38,6 +38,9 @@ class EnrollmentEndpointTest {
     private long otherStudentId;
     private long subjectNoPrereqs;
     private long subjectWithPrereqs;
+    private long extraSubject;
+    private long enrollmentWithoutGradesId;
+    private long enrollmentWithGradesId;
 
     // Cookies de sesión extraídas manualmente del header Set-Cookie
     private String adminCookie;
@@ -233,7 +236,72 @@ class EnrollmentEndpointTest {
         assertNotNull(json.get("error"));
     }
 
+    // =====================================================================
+    // DELETE /students/:id/enrollments/:enrollmentId — cancelar inscripción
+    // =====================================================================
+
+    // AC-1: cancelación exitosa → 204
+    @Test
+    @Order(9)
+    void cancelEnrollment_noGrades_returns204() throws Exception {
+        HttpResponse<String> res = delete(adminCookie, "/students/" + studentId + "/enrollments/" + enrollmentWithoutGradesId);
+
+        assertEquals(204, res.statusCode(), "Cancelación sin calificaciones debe retornar 204");
+        assertEquals("", res.body(), "204 No Content debe tener body vacío");
+    }
+
+    // AC-2: enrollment con calificaciones → 409
+    @Test
+    @Order(10)
+    void cancelEnrollment_withGrades_returns409() throws Exception {
+        HttpResponse<String> res = delete(adminCookie, "/students/" + studentId + "/enrollments/" + enrollmentWithGradesId);
+        Map<?, ?> json = mapper.readValue(res.body(), Map.class);
+
+        assertEquals(409, res.statusCode(), "Cancelación con calificaciones debe retornar 409");
+        assertTrue(json.get("error").toString().contains("calificaciones cargadas"),
+                "El mensaje debe indicar que ya tiene calificaciones");
+    }
+
+    // AC-3: enrollment no existe → 404
+    @Test
+    @Order(11)
+    void cancelEnrollment_notFound_returns404() throws Exception {
+        HttpResponse<String> res = delete(adminCookie, "/students/" + studentId + "/enrollments/99999");
+        Map<?, ?> json = mapper.readValue(res.body(), Map.class);
+
+        assertEquals(404, res.statusCode(), "Enrollment inexistente debe retornar 404");
+        assertNotNull(json.get("error"));
+    }
+
+    // AC-4: estudiante no-owner → 403
+    @Test
+    @Order(12)
+    void cancelEnrollment_studentNotOwner_returns403() throws Exception {
+        // studentCookie es de otherStudentId; intenta cancelar enrollment de studentId
+        HttpResponse<String> res = delete(studentCookie, "/students/" + studentId + "/enrollments/" + enrollmentWithoutGradesId);
+        Map<?, ?> json = mapper.readValue(res.body(), Map.class);
+
+        assertEquals(403, res.statusCode(), "Estudiante no-owner debe retornar 403");
+        assertTrue(json.get("error").toString().contains("No autorizado"),
+                "El mensaje debe indicar que no está autorizado");
+    }
+
     // ============================= Helpers =================================
+
+    /**
+     * Envía un DELETE request con la cookie de sesión dada.
+     * Si sessionCookie es null, se envía sin autenticación.
+     */
+    private HttpResponse<String> delete(String sessionCookie, String path) throws Exception {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .DELETE()
+                .header("Content-Type", "application/json");
+        if (sessionCookie != null) {
+            builder.header("Cookie", sessionCookie);
+        }
+        return HttpClient.newHttpClient().send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    }
 
     /**
      * Envía un POST JSON al endpoint con la cookie de sesión dada.
@@ -322,9 +390,25 @@ class EnrollmentEndpointTest {
         Base.exec("INSERT INTO subjects (subject_name) VALUES (?)", "Estructuras de Datos");
         subjectWithPrereqs = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
 
+        // Materia extra sin correlativas (para tests de cancelación)
+        Base.exec("INSERT INTO subjects (subject_name) VALUES (?)", "Matematica Discreta");
+        extraSubject = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
+
         // subjectWithPrereqs requiere subjectNoPrereqs aprobada
         Base.exec("INSERT INTO conditions (subject_id, prerequisite_subject_id, type) VALUES (?,?,?)",
                 subjectWithPrereqs, subjectNoPrereqs, "APROBADA");
-        // El estudiante principal (studentId) NO tiene evaluaciones → falla la correlativa
+        // El estudiante principal (studentId) NO tiene evaluaciones de subjectNoPrereqs → falla la correlativa
+
+        // Enrollment SIN calificaciones (para tests de cancelación)
+        Base.exec("INSERT INTO enrollments (student_id, subject_id, period, status, created_at) VALUES (?,?,?,?,?)",
+                studentId, extraSubject, "2025-1", "ENROLLED", "2025-01-15");
+        enrollmentWithoutGradesId = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
+
+        // Enrollment CON calificaciones (para tests de cancelación → 409)
+        Base.exec("INSERT INTO enrollments (student_id, subject_id, period, status, created_at) VALUES (?,?,?,?,?)",
+                studentId, extraSubject, "2025-2", "ENROLLED", "2025-06-15");
+        enrollmentWithGradesId = ((Number) Base.firstCell("SELECT last_insert_rowid()")).longValue();
+        Base.exec("INSERT INTO evaluations (enrollment_id, grade, condition_type, evaluation_date) VALUES (?,?,?,?)",
+                enrollmentWithGradesId, 7.5, "APROBADA", "2025-07-01");
     }
 }
