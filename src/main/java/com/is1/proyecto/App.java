@@ -1,5 +1,6 @@
 package com.is1.proyecto; // Define el paquete de la aplicación, debe coincidir con la estructura de carpetas.
 
+import com.is1.proyecto.config.DarkModeFilter; // Filtro de modo oscuro global.
 import com.is1.proyecto.config.DBConfigSingleton; // Clase Singleton para la configuración de la base de datos.
 import com.is1.proyecto.config.DBConnectionFilter; // Filtros de conexión a la base de datos.
 import com.is1.proyecto.repositories.*;
@@ -24,6 +25,7 @@ import com.is1.proyecto.services.TeacherService;
 import com.is1.proyecto.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import spark.Spark;
 import static spark.Spark.port;
 
 /**
@@ -42,6 +44,9 @@ public class App {
     public static void main(String[] args) {
         int serverPort = Integer.parseInt(System.getProperty("server.port", "8080"));
         port(serverPort);
+
+        // --- Configuración de archivos estáticos ---
+        Spark.staticFiles.location("/public");
 
         // --- Configuración de la base de datos ---
         DBConfigSingleton dbConfig = DBConfigSingleton.getInstance();
@@ -101,5 +106,10 @@ public class App {
         new StudyPlanRoutes(studyPlanService, careerService, subjectService).register();
         new SubjectRoutes(subjectService, conditionService, careerService, studyPlanService).register();
         new UserApiRoutes(authService, userService, objectMapper).register();
+
+        // --- Filtro de modo oscuro ---
+        // Debe registrarse al final, después de todas las rutas y filtros,
+        // para garantizar que el body HTML ya esté completamente renderizado.
+        DarkModeFilter.register();
     }
 }
