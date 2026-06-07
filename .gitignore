@@ -35,7 +35,7 @@ target/
 .factorypath
 .project
 .settings/
-
+db/
 # Claude Code
 .claude/
 CLAUDE.md
