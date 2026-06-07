@@ -106,6 +106,16 @@ public class EvaluationService {
     }
 
     /**
+     * Obtiene las evaluaciones (calificaciones) filtradas por materia.
+     *
+     * @param subjectId ID de la materia
+     * @return Lista de evaluaciones para esa materia
+     */
+    public List<Evaluation> getEvaluationsBySubject(Integer subjectId) {
+        return repository.findBySubject(subjectId);
+    }
+
+    /**
      * Resultado de la carga de una calificación por parte de un docente (endpoint REST #24).
      * Transporta el código HTTP, la evaluación creada y el estado resultante de la inscripción.
      */

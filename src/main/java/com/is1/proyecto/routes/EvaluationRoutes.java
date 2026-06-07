@@ -22,10 +22,23 @@ public class EvaluationRoutes {
     }
 
     public void register() {
-        // 1. GET /grades - Lista todas las calificaciones cargadas
+        // 1. GET /grades - Lista las calificaciones (opcionalmente filtradas por materia)
         get("/grades", (req, res) -> {
             Map<String, Object> model = new HashMap<>();
-            model.put("evaluations", evaluationService.getAllEvaluations());
+
+            // Si viene subjectId, filtrar por materia
+            String subjectIdParam = req.queryParams("subjectId");
+            if (subjectIdParam != null && !subjectIdParam.isEmpty()) {
+                try {
+                    Integer subjectId = Integer.parseInt(subjectIdParam);
+                    model.put("evaluations", evaluationService.getEvaluationsBySubject(subjectId));
+                    model.put("subjectId", subjectId);
+                } catch (NumberFormatException e) {
+                    model.put("evaluations", evaluationService.getAllEvaluations());
+                }
+            } else {
+                model.put("evaluations", evaluationService.getAllEvaluations());
+            }
             
             // Si venís de un redireccionamiento con mensaje de error o éxito, se lo pasamos al Mustache
             if (req.session().attribute("flashMessage") != null) {

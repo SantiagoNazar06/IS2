@@ -76,7 +76,7 @@ public class SecurityConfig {
         PROTECTED_ROUTES.put("/subjects", Set.of(Role.ADMIN, Role.TEACHER));
         PROTECTED_ROUTES.put("/subject", Set.of(Role.ADMIN, Role.TEACHER));
         
-        // Rutas de planes de estudio - todos los roles
+        // Rutas de planes de estudio - ADMIN gestiona, TEACHER/STUDENT solo ven JSON
         PROTECTED_ROUTES.put("/study-plans", Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT));
         PROTECTED_ROUTES.put("/study-plan", Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT));
         

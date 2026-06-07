@@ -99,6 +99,13 @@ public class TeacherRoutes {
             }
         }
         List<Map<String, Object>> students = teacherService.getSubjectStudents(teacherId, subjectId);
+        // Agregar flags para el selector de condicion en el template
+        for (Map<String, Object> student : students) {
+            String condition = (String) student.get("condition");
+            student.put("isRegular", "REGULAR".equals(condition));
+            student.put("isAprobada", "APROBADA".equals(condition));
+            student.put("isPromocion", "PROMOCION".equals(condition));
+        }
         Map<String, Object> model = new HashMap<>();
         model.put("students", students);
         model.put("teacherId", teacherId);

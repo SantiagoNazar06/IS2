@@ -65,4 +65,16 @@ public class SubjectRepository {
         subject.delete();
         return true;
     }
+
+    // Retorna las materias cuyo plan de estudio pertenece a la carrera indicada,
+    // o que no tienen plan de estudio asignado (disponibles para asignar)
+    public List<Subject> findByCareerOrUnassigned(int careerId) {
+        return Subject.findBySQL(
+            "SELECT s.* FROM subjects s " +
+            "LEFT JOIN study_plans sp ON sp.id_study_plan = s.id_study_plan " +
+            "WHERE sp.id_career = ? OR s.id_study_plan IS NULL " +
+            "ORDER BY s.subject_name",
+            careerId
+        ).load();
+    }
 }
