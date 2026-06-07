@@ -6,6 +6,8 @@ import spark.Request;
 import spark.Response;
 import spark.template.mustache.MustacheTemplateEngine;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,20 +59,20 @@ public class AssignmentRoutes {
 
         if (teacherIdStr == null || subjectIdStr == null || period == null || period.isBlank()
                 || role == null || role.isBlank()) {
-            res.redirect("/admin/assignments?error=Todos los campos son obligatorios");
+            res.redirect("/admin/assignments?error=" + urlEncode("Todos los campos son obligatorios"));
             return "";
         }
 
         try {
             Long teacherId = Long.parseLong(teacherIdStr);
             Long subjectId = Long.parseLong(subjectIdStr);
-
             teacherService.createAssignment(teacherId, subjectId, period.trim(), role.trim());
-            res.redirect("/admin/assignments?message=Asignación creada exitosamente");
         } catch (Exception e) {
             System.err.println("Error al crear asignación: " + e.getMessage());
-            res.redirect("/admin/assignments?error=Error al crear la asignación: " + e.getMessage());
+            res.redirect("/admin/assignments?error=" + urlEncode("Error al crear la asignación: " + e.getMessage()));
+            return "";
         }
+        res.redirect("/admin/assignments?message=" + urlEncode("Asignación creada exitosamente"));
         return "";
     }
 
@@ -78,16 +80,21 @@ public class AssignmentRoutes {
         String idStr = req.params(":id");
         try {
             Long id = Long.parseLong(idStr);
-            if (teacherService.deleteAssignment(id)) {
-                res.redirect("/admin/assignments?message=Asignación eliminada correctamente");
-            } else {
-                res.redirect("/admin/assignments?error=La asignación no existe");
+            if (!teacherService.deleteAssignment(id)) {
+                res.redirect("/admin/assignments?error=" + urlEncode("La asignación no existe"));
+                return "";
             }
         } catch (Exception e) {
             System.err.println("Error al eliminar asignación: " + e.getMessage());
-            res.redirect("/admin/assignments?error=Error al eliminar la asignación");
+            res.redirect("/admin/assignments?error=" + urlEncode("Error al eliminar la asignación"));
+            return "";
         }
+        res.redirect("/admin/assignments?message=" + urlEncode("Asignación eliminada correctamente"));
         return "";
+    }
+
+    private static String urlEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     private ModelAndView showTeacherAssignments(Request req, Response res) {

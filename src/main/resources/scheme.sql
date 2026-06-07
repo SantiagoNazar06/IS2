@@ -70,15 +70,17 @@ DROP TABLE IF EXISTS enrollments;
 
 CREATE TABLE enrollments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER NOT NULL,
-    subject_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL REFERENCES students(id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
     period TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'ENROLLED' CHECK(status IN('ENROLLED', 'DROPPED', 'COMPLETED')),
-    created_at TEXT NOT NULL,
-    FOREIGN KEY (student_id) REFERENCES students(id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(id_subject),
+    status TEXT NOT NULL DEFAULT 'ENROLLED'
+        CHECK(status IN('ENROLLED', 'DROPPED', 'COMPLETED', 'CANCELLED')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(student_id, subject_id, period)
 );
+
+CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments(student_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_subject_id ON enrollments(subject_id);
 
 DROP TABLE IF EXISTS evaluations;
 

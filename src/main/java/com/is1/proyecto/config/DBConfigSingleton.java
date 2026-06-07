@@ -146,6 +146,49 @@ public final class DBConfigSingleton {
             } catch (Exception e) {
                 System.err.println("[DB] Migracion indice subject_id fallo: " + e.getMessage());
             }
+
+            // Migracion 7: CHECK constraint + indices en enrollments
+            try (ResultSet rs = stmt.executeQuery(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='enrollments'")) {
+                if (rs.next()) {
+                    String createSql = rs.getString("sql");
+                    if (createSql != null && !createSql.contains("CANCELLED")) {
+                        System.out.println("[DB] Migracion: actualizando CHECK constraint en enrollments...");
+                        stmt.execute("PRAGMA foreign_keys = OFF");
+                        stmt.execute("ALTER TABLE enrollments RENAME TO enrollments_old");
+                        stmt.execute(
+                            "CREATE TABLE enrollments (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "student_id INTEGER NOT NULL REFERENCES students(id), " +
+                            "subject_id INTEGER NOT NULL REFERENCES subjects(id_subject), " +
+                            "period TEXT NOT NULL, " +
+                            "status TEXT NOT NULL DEFAULT 'ENROLLED' " +
+                            "CHECK(status IN('ENROLLED','DROPPED','COMPLETED','CANCELLED')), " +
+                            "created_at TEXT NOT NULL, " +
+                            "UNIQUE(student_id, subject_id, period)" +
+                            ")"
+                        );
+                        stmt.execute("INSERT INTO enrollments " +
+                            "SELECT id, student_id, subject_id, period, status, created_at " +
+                            "FROM enrollments_old");
+                        stmt.execute("DROP TABLE enrollments_old");
+                        stmt.execute("PRAGMA foreign_keys = ON");
+                        System.out.println("[DB] Migracion: CHECK constraint de enrollments actualizado.");
+                    }
+                }
+            }
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments(student_id)");
+                System.out.println("[DB] Migracion: indice idx_enrollments_student_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice student_id fallo: " + e.getMessage());
+            }
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_enrollments_subject_id ON enrollments(subject_id)");
+                System.out.println("[DB] Migracion: indice idx_enrollments_subject_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice subject_id fallo: " + e.getMessage());
+            }
         } catch (Exception e) {
             System.err.println("[DB] Migracion fallo (no critico): " + e.getMessage());
         }
