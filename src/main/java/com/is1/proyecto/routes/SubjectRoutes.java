@@ -106,10 +106,10 @@ public class SubjectRoutes {
         put("/subjects/:id", this::handleUpdateSubject);
         delete("/subjects/:id", this::handleDeleteSubject);
 
-        // ── Correlatividades (JSON) ──
-        get("/subjects/:id/prerequisites", this::handleGetPrerequisites);
+        // ── Correlatividades (HTML) ──
+        get("/subjects/:id/prerequisites", this::handleGetPrerequisites, templateEngine);
         post("/subjects/:id/prerequisites", this::handleAddPrerequisite);
-        delete("/subjects/:id/prerequisites/:conditionId", this::handleRemovePrerequisite);
+        post("/subjects/:id/prerequisites/:conditionId/delete", this::handleRemovePrerequisite);
     }
 
     // ========================================================================
@@ -420,24 +420,85 @@ public class SubjectRoutes {
     // CORRELATIVIDADES: GET /subjects/:id/prerequisites
     // ========================================================================
 
-    Object handleGetPrerequisites(Request req, Response res) {
-        res.type("application/json");
+    ModelAndView handleGetPrerequisites(Request req, Response res) {
+        Map<String, Object> model = new HashMap<>();
+
+        // Flash messages
+        if (req.session().attribute("flashMessage") != null) {
+            model.put("message", req.session().attribute("flashMessage"));
+            req.session().removeAttribute("flashMessage");
+        }
+        if (req.session().attribute("flashError") != null) {
+            model.put("error", req.session().attribute("flashError"));
+            req.session().removeAttribute("flashError");
+        }
+
         try {
             int subjectId = Integer.parseInt(req.params(":id"));
 
             Subject subject = Subject.findById(subjectId);
             if (subject == null) {
-                res.status(404);
-                return toJson(Map.of("error", "Subject not found"));
+                req.session().attribute("flashError", "Materia no encontrada.");
+                res.redirect("/subjects/manage");
+                return null;
             }
 
+            model.put("subject", Map.of(
+                    "id", subject.getId(),
+                    "code", subject.getCode(),
+                    "subjectName", subject.getSubjectName()
+            ));
+            model.put("subjectId", subjectId);
+
+            // Build prerequisites list with code
             List<PrerequisiteDTO> prerequisites = conditionService.getPrerequisites(subjectId);
-            res.status(200);
-            return toJson(prerequisites);
+            List<Map<String, Object>> prereqModels = new ArrayList<>();
+            for (PrerequisiteDTO p : prerequisites) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", p.getId());
+                m.put("subjectId", p.getSubjectId());
+                m.put("prerequisiteSubjectId", p.getPrerequisiteSubjectId());
+                m.put("prerequisiteSubjectName", p.getPrerequisiteSubjectName());
+                Subject prereqSubject = Subject.findById(p.getPrerequisiteSubjectId());
+                m.put("prerequisiteSubjectCode", prereqSubject != null ? prereqSubject.getCode() : "");
+                m.put("type", p.getType().name());
+                m.put("isRegular", p.getType() == ConditionType.REGULAR);
+                prereqModels.add(m);
+            }
+            model.put("prerequisites", prereqModels);
+
+            // Available subjects (all subjects except current)
+            List<Map<String, Object>> availableSubjects = new ArrayList<>();
+            for (SubjectDTO s : subjectService.getAllSubjects(null)) {
+                if (!s.getSubjectId().equals((long) subjectId)) {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("subjectId", s.getSubjectId());
+                    m.put("subjectName", s.getSubjectName());
+                    m.put("code", s.getCode());
+                    availableSubjects.add(m);
+                }
+            }
+            model.put("availableSubjects", availableSubjects);
+
+            // Condition types for selector
+            List<Map<String, Object>> conditionTypes = new ArrayList<>();
+            for (ConditionType ct : ConditionType.values()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("name", ct.name());
+                // Capitalize first letter: REGULAR → Regular, APROBADA → Aprobada
+                String label = ct.name().charAt(0) + ct.name().substring(1).toLowerCase();
+                m.put("label", label);
+                conditionTypes.add(m);
+            }
+            model.put("conditionTypes", conditionTypes);
+
         } catch (NumberFormatException e) {
-            res.status(400);
-            return toJson(Map.of("error", "ID debe ser un numero valido"));
+            req.session().attribute("flashError", "ID de materia invalido.");
+            res.redirect("/subjects/manage");
+            return null;
         }
+
+        return new ModelAndView(model, "subjects-prerequisites.mustache");
     }
 
     // ========================================================================
@@ -445,55 +506,66 @@ public class SubjectRoutes {
     // ========================================================================
 
     Object handleAddPrerequisite(Request req, Response res) {
-        res.type("application/json");
         try {
             int subjectId = Integer.parseInt(req.params(":id"));
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = objectMapper.readValue(req.body(), Map.class);
+            String prereqIdParam = req.queryParams("prerequisiteSubjectId");
+            String typeStr = req.queryParams("type");
 
-            int prereqId = ((Number) body.get("prerequisiteSubjectId")).intValue();
-            String typeStr = (String) body.get("type");
-
-            ConditionType type = ConditionType.fromString(typeStr);
-            if (type == null) {
-                throw new IllegalArgumentException("Invalid condition type: " + typeStr);
+            if (prereqIdParam == null || typeStr == null) {
+                req.session().attribute("flashError", "Parametros incompletos.");
+                res.redirect("/subjects/" + subjectId + "/prerequisites");
+                return "";
             }
 
-            PrerequisiteDTO result = conditionService.addPrerequisite(subjectId, prereqId, type);
-            res.status(201);
-            return toJson(result);
+            int prereqId = Integer.parseInt(prereqIdParam);
+            ConditionType type = ConditionType.fromString(typeStr);
+            if (type == null) {
+                throw new IllegalArgumentException("Tipo de condicion invalido: " + typeStr);
+            }
+
+            conditionService.addPrerequisite(subjectId, prereqId, type);
+            req.session().attribute("flashMessage", "Correlativa agregada exitosamente.");
 
         } catch (IllegalArgumentException e) {
-            res.status(409);
-            return toJson(Map.of("error", e.getMessage()));
+            req.session().attribute("flashError", e.getMessage());
         } catch (Exception e) {
-            res.status(400);
-            return toJson(Map.of("error", "Invalid request"));
+            req.session().attribute("flashError", "Error al agregar la correlativa.");
         }
+
+        int subjectId;
+        try {
+            subjectId = Integer.parseInt(req.params(":id"));
+        } catch (NumberFormatException e) {
+            res.redirect("/subjects/manage");
+            return "";
+        }
+        res.redirect("/subjects/" + subjectId + "/prerequisites");
+        return "";
     }
 
     // ========================================================================
-    // CORRELATIVIDADES: DELETE /subjects/:id/prerequisites/:conditionId
+    // CORRELATIVIDADES: POST /subjects/:id/prerequisites/:conditionId/delete
     // ========================================================================
 
     Object handleRemovePrerequisite(Request req, Response res) {
-        res.type("application/json");
         try {
+            int subjectId = Integer.parseInt(req.params(":id"));
             int conditionId = Integer.parseInt(req.params(":conditionId"));
 
             boolean removed = conditionService.removePrerequisite(conditionId);
             if (removed) {
-                res.status(204);
-                return "";
+                req.session().attribute("flashMessage", "Correlativa eliminada exitosamente.");
             } else {
-                res.status(404);
-                return toJson(Map.of("error", "Prerequisite not found"));
+                req.session().attribute("flashError", "La correlativa no existe.");
             }
+
+            res.redirect("/subjects/" + subjectId + "/prerequisites");
         } catch (NumberFormatException e) {
-            res.status(400);
-            return toJson(Map.of("error", "ID debe ser un numero valido"));
+            req.session().attribute("flashError", "ID invalido.");
+            res.redirect("/subjects/manage");
         }
+        return "";
     }
 
     // ========================================================================

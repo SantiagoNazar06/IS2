@@ -1,7 +1,5 @@
 package com.is1.proyecto.routes;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.is1.proyecto.models.ConditionType;
 import com.is1.proyecto.models.Subject;
 import com.is1.proyecto.services.ConditionService;
@@ -13,23 +11,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
+import spark.Session;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Pruebas unitarias para SubjectRoutes.
- * Utiliza mocks de Spark Request/Response y de ConditionService.
- * Sigue el patron de ConditionServiceTest con MockedStatic para Subject.findById.
+ * Pruebas unitarias para SubjectRoutes — handlers HTML de correlatividades.
+ * Verifica que los handlers devuelvan ModelAndView o redirects con flash messages,
+ * y que utilicen req.queryParams() en lugar de req.body().
  */
 @ExtendWith(MockitoExtension.class)
 class SubjectRoutesTest {
@@ -46,13 +42,14 @@ class SubjectRoutesTest {
     @Mock
     private Response res;
 
+    @Mock
+    private Session session;
+
     private SubjectRoutes subjectRoutes;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
         subjectRoutes = new SubjectRoutes(subjectService, conditionService);
-        objectMapper = new ObjectMapper();
     }
 
     // =====================================================================
@@ -60,95 +57,98 @@ class SubjectRoutesTest {
     // =====================================================================
 
     @Test
-    void testGetPrerequisites_subjectExists_returns200WithJsonArray() throws Exception {
-        // Arrange
+    void testGetPrerequisites_subjectExists_returnsModelAndView() throws Exception {
         when(req.params(":id")).thenReturn("1");
+        when(req.session()).thenReturn(session);
 
         PrerequisiteDTO dto = new PrerequisiteDTO(1, 1, 2, "Matematica", ConditionType.REGULAR);
         when(conditionService.getPrerequisites(1)).thenReturn(Arrays.asList(dto));
 
+        when(subjectService.getAllSubjects(null)).thenReturn(Collections.emptyList());
+
         try (MockedStatic<Subject> subjectMock = mockStatic(Subject.class)) {
             Subject subject = mock(Subject.class);
+            when(subject.getId()).thenReturn(1);
+            when(subject.getCode()).thenReturn("MATE101");
+            when(subject.getSubjectName()).thenReturn("Matematica I");
             subjectMock.when(() -> Subject.findById(1)).thenReturn(subject);
 
-            // Act
+            // Mock the prereq subject lookup for prerequisiteSubjectCode
+            Subject prereqSubject = mock(Subject.class);
+            when(prereqSubject.getCode()).thenReturn("ALG101");
+            subjectMock.when(() -> Subject.findById(2)).thenReturn(prereqSubject);
+
             Object result = subjectRoutes.handleGetPrerequisites(req, res);
 
-            // Assert
-            verify(res).type("application/json");
-            verify(res).status(200);
-            assertNotNull(result);
-            assertInstanceOf(String.class, result);
+            assertInstanceOf(ModelAndView.class, result);
+            ModelAndView mnv = (ModelAndView) result;
+            assertEquals("subjects-prerequisites.mustache", mnv.getViewName());
 
-            List<PrerequisiteDTO> parsed = objectMapper.readValue(
-                    (String) result,
-                    new TypeReference<List<PrerequisiteDTO>>() {});
-            assertEquals(1, parsed.size());
-            PrerequisiteDTO actual = parsed.get(0);
-            assertEquals(1, actual.getId());
-            assertEquals(1, actual.getSubjectId());
-            assertEquals(2, actual.getPrerequisiteSubjectId());
-            assertEquals("Matematica", actual.getPrerequisiteSubjectName());
-            assertEquals(ConditionType.REGULAR, actual.getType());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> model = (Map<String, Object>) mnv.getModel();
+
+            assertNotNull(model.get("subject"));
+            assertEquals(1, model.get("subjectId"));
+
+            assertNotNull(model.get("prerequisites"));
+            List<Map<String, Object>> prereqs = (List<Map<String, Object>>) model.get("prerequisites");
+            assertEquals(1, prereqs.size());
+            assertEquals("Matematica", prereqs.get(0).get("prerequisiteSubjectName"));
+            assertEquals("ALG101", prereqs.get(0).get("prerequisiteSubjectCode"));
+            assertEquals("REGULAR", prereqs.get(0).get("type"));
+            assertEquals(true, prereqs.get(0).get("isRegular"));
+
+            assertNotNull(model.get("availableSubjects"));
+            assertNotNull(model.get("conditionTypes"));
+            assertEquals(2, ((List<?>) model.get("conditionTypes")).size());
 
             verify(conditionService).getPrerequisites(1);
-            subjectMock.verify(() -> Subject.findById(1));
         }
     }
 
     @Test
-    void testGetPrerequisites_subjectNotFound_returns404WithError() throws Exception {
-        // Arrange
+    void testGetPrerequisites_emptyList_returnsModelAndViewWithEmptyPrereqs() throws Exception {
+        when(req.params(":id")).thenReturn("2");
+        when(req.session()).thenReturn(session);
+        when(conditionService.getPrerequisites(2)).thenReturn(Collections.emptyList());
+        when(subjectService.getAllSubjects(null)).thenReturn(Collections.emptyList());
+
+        try (MockedStatic<Subject> subjectMock = mockStatic(Subject.class)) {
+            Subject subject = mock(Subject.class);
+            when(subject.getId()).thenReturn(2);
+            when(subject.getCode()).thenReturn("PROG101");
+            when(subject.getSubjectName()).thenReturn("Programacion I");
+            subjectMock.when(() -> Subject.findById(2)).thenReturn(subject);
+
+            Object result = subjectRoutes.handleGetPrerequisites(req, res);
+
+            assertInstanceOf(ModelAndView.class, result);
+            ModelAndView mnv = (ModelAndView) result;
+            assertEquals("subjects-prerequisites.mustache", mnv.getViewName());
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> model = (Map<String, Object>) mnv.getModel();
+            assertNotNull(model.get("prerequisites"));
+            assertTrue(((List<?>) model.get("prerequisites")).isEmpty());
+
+            verify(conditionService).getPrerequisites(2);
+        }
+    }
+
+    @Test
+    void testGetPrerequisites_subjectNotFound_redirectsWithError() throws Exception {
         when(req.params(":id")).thenReturn("99");
+        when(req.session()).thenReturn(session);
 
         try (MockedStatic<Subject> subjectMock = mockStatic(Subject.class)) {
             subjectMock.when(() -> Subject.findById(99)).thenReturn(null);
 
-            // Act
             Object result = subjectRoutes.handleGetPrerequisites(req, res);
 
-            // Assert
-            verify(res).type("application/json");
-            verify(res).status(404);
-            assertNotNull(result);
-            assertInstanceOf(String.class, result);
-
-            Map<String, String> parsed = objectMapper.readValue(
-                    (String) result,
-                    new TypeReference<Map<String, String>>() {});
-            assertEquals("Subject not found", parsed.get("error"));
-
-            // Service should NOT be called when subject doesn't exist
+            assertNull(result);
+            verify(res).redirect("/subjects/manage");
+            verify(session).attribute("flashError", "Materia no encontrada.");
             verify(conditionService, never()).getPrerequisites(anyInt());
-            subjectMock.verify(() -> Subject.findById(99));
-        }
-    }
-
-    @Test
-    void testGetPrerequisites_emptyList_returns200WithEmptyArray() throws Exception {
-        // Arrange
-        when(req.params(":id")).thenReturn("2");
-
-        when(conditionService.getPrerequisites(2)).thenReturn(Collections.emptyList());
-
-        try (MockedStatic<Subject> subjectMock = mockStatic(Subject.class)) {
-            Subject subject = mock(Subject.class);
-            subjectMock.when(() -> Subject.findById(2)).thenReturn(subject);
-
-            // Act
-            Object result = subjectRoutes.handleGetPrerequisites(req, res);
-
-            // Assert
-            verify(res).type("application/json");
-            verify(res).status(200);
-            assertNotNull(result);
-
-            List<PrerequisiteDTO> parsed = objectMapper.readValue(
-                    (String) result,
-                    new TypeReference<List<PrerequisiteDTO>>() {});
-            assertTrue(parsed.isEmpty());
-
-            verify(conditionService).getPrerequisites(2);
         }
     }
 
@@ -157,126 +157,86 @@ class SubjectRoutesTest {
     // =====================================================================
 
     @Test
-    void testAddPrerequisite_happyPath_returns201WithJson() throws Exception {
-        // Arrange
+    void testAddPrerequisite_happyPath_redirectsWithFlash() throws Exception {
         when(req.params(":id")).thenReturn("1");
-        String body = "{\"prerequisiteSubjectId\": 2, \"type\": \"REGULAR\"}";
-        when(req.body()).thenReturn(body);
+        when(req.queryParams("prerequisiteSubjectId")).thenReturn("2");
+        when(req.queryParams("type")).thenReturn("REGULAR");
+        when(req.session()).thenReturn(session);
+        when(conditionService.addPrerequisite(1, 2, ConditionType.REGULAR)).thenReturn(new PrerequisiteDTO());
 
-        PrerequisiteDTO created = new PrerequisiteDTO(10, 1, 2, "Matematica", ConditionType.REGULAR);
-        when(conditionService.addPrerequisite(1, 2, ConditionType.REGULAR)).thenReturn(created);
-
-        // Act
         Object result = subjectRoutes.handleAddPrerequisite(req, res);
 
-        // Assert
-        verify(res).type("application/json");
-        verify(res).status(201);
-        assertNotNull(result);
-        assertInstanceOf(String.class, result);
-
-        PrerequisiteDTO actual = objectMapper.readValue((String) result, PrerequisiteDTO.class);
-        assertEquals(10, actual.getId());
-        assertEquals(1, actual.getSubjectId());
-        assertEquals(2, actual.getPrerequisiteSubjectId());
-        assertEquals("Matematica", actual.getPrerequisiteSubjectName());
-        assertEquals(ConditionType.REGULAR, actual.getType());
-
+        assertEquals("", result);
+        verify(session).attribute("flashMessage", "Correlativa agregada exitosamente.");
+        verify(res).redirect("/subjects/1/prerequisites");
         verify(conditionService).addPrerequisite(1, 2, ConditionType.REGULAR);
     }
 
     @Test
-    void testAddPrerequisite_illegalArgument_returns409WithError() throws Exception {
-        // Arrange
+    void testAddPrerequisite_illegalArgument_redirectsWithError() throws Exception {
         when(req.params(":id")).thenReturn("1");
-        String body = "{\"prerequisiteSubjectId\": 1, \"type\": \"REGULAR\"}";
-        when(req.body()).thenReturn(body);
-
+        when(req.queryParams("prerequisiteSubjectId")).thenReturn("1");
+        when(req.queryParams("type")).thenReturn("REGULAR");
+        when(req.session()).thenReturn(session);
         when(conditionService.addPrerequisite(1, 1, ConditionType.REGULAR))
                 .thenThrow(new IllegalArgumentException("Una materia no puede ser requisito de si misma"));
 
-        // Act
         Object result = subjectRoutes.handleAddPrerequisite(req, res);
 
-        // Assert
-        verify(res).type("application/json");
-        verify(res).status(409);
-        assertNotNull(result);
-
-        Map<String, String> parsed = objectMapper.readValue(
-                (String) result,
-                new TypeReference<Map<String, String>>() {});
-        assertEquals("Una materia no puede ser requisito de si misma", parsed.get("error"));
-
+        assertEquals("", result);
+        verify(session).attribute("flashError", "Una materia no puede ser requisito de si misma");
+        verify(res).redirect("/subjects/1/prerequisites");
         verify(conditionService).addPrerequisite(1, 1, ConditionType.REGULAR);
     }
 
     @Test
-    void testAddPrerequisite_genericException_returns400WithError() throws Exception {
-        // Arrange
+    void testAddPrerequisite_genericException_redirectsWithError() throws Exception {
         when(req.params(":id")).thenReturn("1");
-        String body = "{\"prerequisiteSubjectId\": 2, \"type\": \"REGULAR\"}";
-        when(req.body()).thenReturn(body);
-
+        when(req.queryParams("prerequisiteSubjectId")).thenReturn("2");
+        when(req.queryParams("type")).thenReturn("REGULAR");
+        when(req.session()).thenReturn(session);
         when(conditionService.addPrerequisite(1, 2, ConditionType.REGULAR))
-                .thenThrow(new RuntimeException("DB connection error"));
+                .thenThrow(new RuntimeException("DB error"));
 
-        // Act
         Object result = subjectRoutes.handleAddPrerequisite(req, res);
 
-        // Assert
-        verify(res).type("application/json");
-        verify(res).status(400);
-        assertNotNull(result);
-
-        Map<String, String> parsed = objectMapper.readValue(
-                (String) result,
-                new TypeReference<Map<String, String>>() {});
-        assertEquals("Invalid request", parsed.get("error"));
-
+        assertEquals("", result);
+        verify(session).attribute("flashError", "Error al agregar la correlativa.");
+        verify(res).redirect("/subjects/1/prerequisites");
         verify(conditionService).addPrerequisite(1, 2, ConditionType.REGULAR);
     }
 
     // =====================================================================
-    // DELETE /subjects/:id/prerequisites/:conditionId
+    // POST /subjects/:id/prerequisites/:conditionId/delete
     // =====================================================================
 
     @Test
-    void testRemovePrerequisite_success_returns204() throws Exception {
-        // Arrange
+    void testRemovePrerequisite_success_redirectsWithFlash() throws Exception {
         when(req.params(":conditionId")).thenReturn("1");
+        when(req.params(":id")).thenReturn("1");
+        when(req.session()).thenReturn(session);
         when(conditionService.removePrerequisite(1)).thenReturn(true);
 
-        // Act
         Object result = subjectRoutes.handleRemovePrerequisite(req, res);
 
-        // Assert
-        verify(res).type("application/json");
-        verify(res).status(204);
-        verify(conditionService).removePrerequisite(1);
-        // For 204, the body should be empty
         assertEquals("", result);
+        verify(session).attribute("flashMessage", "Correlativa eliminada exitosamente.");
+        verify(res).redirect("/subjects/1/prerequisites");
+        verify(conditionService).removePrerequisite(1);
     }
 
     @Test
-    void testRemovePrerequisite_notFound_returns404WithError() throws Exception {
-        // Arrange
+    void testRemovePrerequisite_notFound_redirectsWithError() throws Exception {
         when(req.params(":conditionId")).thenReturn("999");
+        when(req.params(":id")).thenReturn("1");
+        when(req.session()).thenReturn(session);
         when(conditionService.removePrerequisite(999)).thenReturn(false);
 
-        // Act
         Object result = subjectRoutes.handleRemovePrerequisite(req, res);
 
-        // Assert
-        verify(res).type("application/json");
-        verify(res).status(404);
-        assertNotNull(result);
-
-        Map<String, String> parsed = objectMapper.readValue(
-                (String) result,
-                new TypeReference<Map<String, String>>() {});
-        assertEquals("Prerequisite not found", parsed.get("error"));
-
+        assertEquals("", result);
+        verify(session).attribute("flashError", "La correlativa no existe.");
+        verify(res).redirect("/subjects/1/prerequisites");
         verify(conditionService).removePrerequisite(999);
     }
 }
