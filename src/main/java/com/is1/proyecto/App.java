@@ -81,7 +81,8 @@ public class App {
         UserService userService = new UserService(authService);
         TeacherRepository teacherRepository = new TeacherRepository();
         TeacherService teacherService = new TeacherService(teacherRepository);
-        StudentService studentService = new StudentService(studentRepository);
+        EnrollmentRepository enrollmentRepository = new EnrollmentRepository();
+        StudentService studentService = new StudentService(studentRepository, enrollmentRepository, evaluationRepository);
         CareerService careerService = new CareerService(careerRepository);
         EvaluationService evaluationService = new EvaluationService(evaluationRepository);
         ConditionService conditionService = new ConditionService(conditionRepository);
