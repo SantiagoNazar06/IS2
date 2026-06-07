@@ -1,8 +1,9 @@
 package com.is1.proyecto.repositories;
 
-import com.is1.proyecto.models.Enrollment;
-
 import java.util.List;
+
+import com.is1.proyecto.models.Enrollment;
+import com.is1.proyecto.models.EnrollmentStatus;
 
 public class EnrollmentRepository {
 
@@ -24,6 +25,15 @@ public class EnrollmentRepository {
 
     public Enrollment create(Enrollment enrollment) {
         enrollment.saveIt();
+        return enrollment;
+    }
+
+    public Enrollment updateStatus(Integer id, EnrollmentStatus status){
+        Enrollment enrollment = findById(id);
+        if(enrollment != null){
+            enrollment.setStatusEnum(status);
+            enrollment.saveIt();
+        }
         return enrollment;
     }
 }

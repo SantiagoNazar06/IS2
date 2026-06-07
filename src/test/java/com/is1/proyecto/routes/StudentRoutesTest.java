@@ -289,6 +289,152 @@ class StudentRoutesTest {
         assertTrue(json.contains("Formato de per\u00edodo inv\u00e1lido"));
     }
 
+    // =====================================================================
+    // handleCancelEnrollment — DELETE /students/:id/enrollments/:enrollmentId
+    // =====================================================================
+
+    @Test
+    void handleCancelEnrollment_invalidStudentId_returns400() throws Exception {
+        when(req.params(":id")).thenReturn("abc");
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(400);
+        verify(res).type("application/json");
+        String json = (String) result;
+        assertTrue(json.contains("ID de estudiante o inscripción inválido"));
+    }
+
+    @Test
+    void handleCancelEnrollment_invalidEnrollmentId_returns400() throws Exception {
+        when(req.params(":id")).thenReturn("1");
+        when(req.params(":enrollmentId")).thenReturn("abc");
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(400);
+        verify(res).type("application/json");
+        String json = (String) result;
+        assertTrue(json.contains("ID de estudiante o inscripción inválido"));
+    }
+
+    @Test
+    void handleCancelEnrollment_studentNotOwner_returns403() throws Exception {
+        when(req.params(":id")).thenReturn("1");
+        when(req.params(":enrollmentId")).thenReturn("10");
+        when(req.session()).thenReturn(session);
+        when(session.attribute("userRole")).thenReturn("STUDENT");
+        when(session.attribute("studentId")).thenReturn(99L);
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(403);
+        verify(res).type("application/json");
+        String json = (String) result;
+        assertTrue(json.contains("No autorizado"));
+    }
+
+    @Test
+    void handleCancelEnrollment_notFound_returns404() throws Exception {
+        when(req.params(":id")).thenReturn("1");
+        when(req.params(":enrollmentId")).thenReturn("10");
+        when(req.session()).thenReturn(session);
+        when(session.attribute("userRole")).thenReturn("STUDENT");
+        when(session.attribute("studentId")).thenReturn(1L);
+
+        StudentService.CancelEnrollmentResult notFound = StudentService.CancelEnrollmentResult.notFound();
+        when(studentService.cancelEnrollment(1L, 10)).thenReturn(notFound);
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(404);
+        verify(res).type("application/json");
+        String json = (String) result;
+        assertTrue(json.contains("Enrollment no encontrado"));
+    }
+
+    @Test
+    void handleCancelEnrollment_conflict_returns409() throws Exception {
+        when(req.params(":id")).thenReturn("1");
+        when(req.params(":enrollmentId")).thenReturn("10");
+        when(req.session()).thenReturn(session);
+        when(session.attribute("userRole")).thenReturn("STUDENT");
+        when(session.attribute("studentId")).thenReturn(1L);
+
+        StudentService.CancelEnrollmentResult conflict = StudentService.CancelEnrollmentResult.conflict(
+            "No se puede cancelar la inscripción porque ya tiene calificaciones cargadas.");
+        when(studentService.cancelEnrollment(1L, 10)).thenReturn(conflict);
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(409);
+        verify(res).type("application/json");
+        String json = (String) result;
+        assertTrue(json.contains("calificaciones cargadas"));
+    }
+
+    @Test
+    void handleCancelEnrollment_success_returns204() throws Exception {
+        when(req.params(":id")).thenReturn("1");
+        when(req.params(":enrollmentId")).thenReturn("10");
+        when(req.session()).thenReturn(session);
+        when(session.attribute("userRole")).thenReturn("STUDENT");
+        when(session.attribute("studentId")).thenReturn(1L);
+
+        StudentService.CancelEnrollmentResult ok = StudentService.CancelEnrollmentResult.ok();
+        when(studentService.cancelEnrollment(1L, 10)).thenReturn(ok);
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(204);
+        verify(res).type("application/json");
+        assertEquals("", result);
+    }
+
+    @Test
+    void handleCancelEnrollment_adminCanCancelAny_returns204() throws Exception {
+        when(req.params(":id")).thenReturn("5");
+        when(req.params(":enrollmentId")).thenReturn("10");
+        when(req.session()).thenReturn(session);
+        when(session.attribute("userRole")).thenReturn("ADMIN");
+
+        StudentService.CancelEnrollmentResult ok = StudentService.CancelEnrollmentResult.ok();
+        when(studentService.cancelEnrollment(5L, 10)).thenReturn(ok);
+
+        StudentRoutes realRoutes = new StudentRoutes(studentService, careerService, subjectService, new ObjectMapper());
+
+        Method method = StudentRoutes.class.getDeclaredMethod("handleCancelEnrollment", Request.class, Response.class);
+        method.setAccessible(true);
+        Object result = method.invoke(realRoutes, req, res);
+
+        verify(res).status(204);
+        assertEquals("", result);
+    }
+
     @Test
     void handleEnroll_success_returns201() throws Exception {
         when(req.params(":id")).thenReturn("1");
