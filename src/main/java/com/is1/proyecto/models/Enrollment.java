@@ -1,10 +1,16 @@
 package com.is1.proyecto.models;
 
 import org.javalite.activejdbc.Model;
+import org.javalite.activejdbc.annotations.IdName;
 import org.javalite.activejdbc.annotations.Table;
 
 @Table("enrollments")
+@IdName("id")
 public class Enrollment extends Model {
+
+    public Long getId() {
+        return getLong("id");
+    }
 
     public Long getStudentId() {
         return getLong("student_id");
@@ -36,6 +42,22 @@ public class Enrollment extends Model {
 
     public void setStatus(String status) {
         set("status", status);
+    }
+
+    public EnrollmentStatus getStatusEnum() {
+        return EnrollmentStatus.fromString(getString("status"));
+    }
+
+    public void setStatusEnum(EnrollmentStatus status) {
+        if (status == null) {
+            set("status", null);
+        } else {
+            set("status", status.name());
+        }
+    }
+
+    public String getEnrollmentDate() {
+        return getString("created_at");
     }
 
     public String getCreatedAt() {
