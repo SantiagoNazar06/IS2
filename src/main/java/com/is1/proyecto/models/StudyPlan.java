@@ -1,6 +1,7 @@
 package com.is1.proyecto.models;
 
 import org.javalite.activejdbc.Model;
+import org.javalite.activejdbc.annotations.BelongsTo;
 import org.javalite.activejdbc.annotations.IdName;
 import org.javalite.activejdbc.annotations.Table;
 
@@ -13,6 +14,7 @@ import org.javalite.activejdbc.annotations.Table;
  */
 @Table("study_plans")
 @IdName("id_study_plan")
+@BelongsTo(parent = Career.class, foreignKeyName = "id_career")
 public class StudyPlan extends Model {
 
     public Integer getId() {

@@ -176,6 +176,19 @@ public class SubjectService {
     }
 
     /**
+     * Obtiene las materias que pertenecen a una carrera (a traves del plan de estudio)
+     * o que no tienen plan asignado. Utiles para asignar materias a un plan de estudio.
+     *
+     * @param careerId ID de la carrera
+     * @return Lista de SubjectDTO
+     */
+    public List<SubjectDTO> getSubjectsByCareerOrUnassigned(int careerId) {
+        return repository.findByCareerOrUnassigned(careerId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Convierte un modelo Subject a SubjectDTO, resolviendo la cadena:
      * Subject → StudyPlan → Career.
      */

@@ -98,8 +98,8 @@ public class App {
         new StudentRoutes(studentService, careerService, subjectService, objectMapper).register();
         new CareerRoutes(careerService).register();
         new EvaluationRoutes(evaluationService).register();
-        new StudyPlanRoutes(studyPlanService).register();
-        new SubjectRoutes(subjectService, conditionService).register();
+        new StudyPlanRoutes(studyPlanService, careerService, subjectService).register();
+        new SubjectRoutes(subjectService, conditionService, careerService, studyPlanService).register();
         new UserApiRoutes(authService, userService, objectMapper).register();
     }
 }

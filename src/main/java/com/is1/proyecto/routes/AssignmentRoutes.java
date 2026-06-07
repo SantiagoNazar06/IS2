@@ -97,6 +97,7 @@ public class AssignmentRoutes {
             List<Map<String, Object>> assignments = teacherService.getAssignedSubjectsSimple(teacherId);
             model.put("assignments", assignments);
             model.put("hasAssignments", assignments != null && !assignments.isEmpty());
+            model.put("teacherId", teacherId);
         }
         return new ModelAndView(model, "teacher_assignments.mustache");
     }
