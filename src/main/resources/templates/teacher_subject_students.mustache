@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Alumnos de la Materia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 min-h-screen">
+    <div class="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Alumnos de la Materia</h1>
+        <p class="text-gray-500 text-sm mb-6">Hacé clic en <strong>Guardar</strong> para registrar o modificar la nota de cada alumno.</p>
+
+        {{#message}}
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{message}}</span>
+        </div>
+        {{/message}}
+
+        {{#error}}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{error}}</span>
+        </div>
+        {{/error}}
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-700 uppercase text-sm">
+                        <th class="py-3 px-4">Apellido y Nombre</th>
+                        <th class="py-3 px-4">DNI</th>
+                        <th class="py-3 px-4">Condición</th>
+                        <th class="py-3 px-4 text-center w-24">Nota</th>
+                        <th class="py-3 px-4 text-center w-28">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm">
+                    {{#students}}
+                    <tr class="border-b hover:bg-gray-50" data-enrollment-id="{{enrollmentId}}">
+                        <td class="py-3 px-4 font-medium text-gray-900 whitespace-nowrap">{{lastName}}, {{firstName}}</td>
+                        <td class="py-3 px-4 whitespace-nowrap">{{dni}}</td>
+                        <td class="py-3 px-4">
+                            <select class="condition-select border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
+                                <option value="REGULAR" {{#isRegular}}selected{{/isRegular}}>Regular</option>
+                                <option value="APROBADA" {{#isAprobada}}selected{{/isAprobada}}>Aprobada</option>
+                                <option value="PROMOCION" {{#isPromocion}}selected{{/isPromocion}}>Promoción</option>
+                            </select>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <input type="number" step="0.01" min="0" max="10"
+                                   value="{{#grade}}{{grade}}{{/grade}}"
+                                   placeholder="—"
+                                   class="grade-input w-20 text-center border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button type="button"
+                                    class="save-grade-btn px-3 py-1.5 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50">
+                                Guardar
+                            </button>
+                            <span class="feedback-message text-xs ml-1"></span>
+                        </td>
+                    </tr>
+                    {{/students}}
+                    {{^students}}
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-gray-400">No hay alumnos inscriptos en esta materia.</td>
+                    </tr>
+                    {{/students}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 flex items-center justify-between">
+            <a href="/teacher/assignments" class="text-purple-600 hover:underline font-medium">&larr; Volver a Mis Materias</a>
+            <a href="/teachers/{{teacherId}}" class="text-gray-500 hover:underline text-sm">Ver perfil del docente</a>
+        </div>
+    </div>
+
+    <script>
+    document.querySelectorAll('.save-grade-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var row = this.closest('tr');
+            var enrollmentId = row.dataset.enrollmentId;
+            var gradeInput = row.querySelector('.grade-input');
+            var grade = gradeInput.value.trim() !== '' ? parseFloat(gradeInput.value) : null;
+            var condition = row.querySelector('.condition-select').value;
+            var feedback = row.querySelector('.feedback-message');
+
+            // Validacion basica: si no es REGULAR, la nota es obligatoria
+            if (condition !== 'REGULAR' && (grade === null || isNaN(grade))) {
+                feedback.textContent = 'Requerido';
+                feedback.className = 'feedback-message text-xs ml-1 text-red-500';
+                return;
+            }
+
+            if (grade !== null && (grade < 0 || grade > 10)) {
+                feedback.textContent = '0-10';
+                feedback.className = 'feedback-message text-xs ml-1 text-red-500';
+                return;
+            }
+
+            this.disabled = true;
+            feedback.textContent = 'Guardando...';
+            feedback.className = 'feedback-message text-xs ml-1 text-gray-500';
+
+            fetch('/teachers/{{teacherId}}/grades', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    enrollmentId: parseInt(enrollmentId),
+                    grade: grade,
+                    condition: condition
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    feedback.textContent = 'Error: ' + data.error;
+                    feedback.className = 'feedback-message text-xs ml-1 text-red-500';
+                } else {
+                    feedback.textContent = '✓ Guardado';
+                    feedback.className = 'feedback-message text-xs ml-1 text-green-600';
+                    // Actualizar el placeholder del input con la nota guardada
+                    if (data.grade !== undefined && data.grade !== null) {
+                        gradeInput.value = data.grade;
+                    }
+                }
+            })
+            .catch(function() {
+                feedback.textContent = 'Error de conexión';
+                feedback.className = 'feedback-message text-xs ml-1 text-red-500';
+            })
+            .finally(function() {
+                btn.disabled = false;
+                // Limpiar mensaje despues de 3 segundos
+                setTimeout(function() {
+                    if (feedback.classList.contains('text-green-600')) {
+                        feedback.textContent = '';
+                    }
+                }, 3000);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

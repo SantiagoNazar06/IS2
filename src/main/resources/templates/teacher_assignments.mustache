@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Materias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Mis Materias Asignadas</h1>
+                <a href="/dashboard" class="text-blue-600 hover:underline text-sm">&larr; Volver al Dashboard</a>
+            </div>
+
+            {{#hasAssignments}}
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-sm font-semibold text-gray-600">Materia</th>
+                            <th class="py-3 px-4 text-sm font-semibold text-gray-600">Período</th>
+                            <th class="py-3 px-4 text-sm font-semibold text-gray-600">Rol</th>
+                            <th class="py-3 px-4 text-sm font-semibold text-gray-600 text-center">Alumnos</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {{#assignments}}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-4 text-gray-800 font-medium">{{subjectName}}</td>
+                            <td class="py-3 px-4 text-gray-600">{{period}}</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full
+                                    {{#isResponsable}}bg-blue-100 text-blue-800{{/isResponsable}}
+                                    {{#isJtp}}bg-green-100 text-green-800{{/isJtp}}
+                                    {{#isAyudante}}bg-yellow-100 text-yellow-800{{/isAyudante}}">
+                                    {{role}}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <a href="/teachers/{{teacherId}}/subjects/{{subjectId}}/students"
+                                   class="text-purple-600 hover:text-purple-800 font-semibold hover:underline">
+                                    Ver Alumnos
+                                </a>
+                            </td>
+                        </tr>
+                        {{/assignments}}
+                    </tbody>
+                </table>
+            </div>
+            {{/hasAssignments}}
+            {{^hasAssignments}}
+            <div class="text-center py-12 bg-gray-50 rounded-lg">
+                <p class="text-gray-500 text-lg">No hay materias asignadas.</p>
+            </div>
+            {{/hasAssignments}}
+        </div>
+    </div>
+</body>
+</html>

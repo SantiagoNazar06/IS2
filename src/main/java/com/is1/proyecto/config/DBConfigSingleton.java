@@ -1,25 +1,31 @@
 // Archivo: com/is1/proyecto/config/DBConfigSingleton.java
 package com.is1.proyecto.config;
 
-import org.javalite.activejdbc.Base; // Necesitarás esta importación para usar Base.open y Base.close
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.stream.Collectors;
+
+import org.javalite.activejdbc.Base;
+
+import com.is1.proyecto.config.DataSeeder;
 
 public final class DBConfigSingleton {
 
     private static DBConfigSingleton instance;
 
-    // Ya no es necesario que sean final si los vas a configurar dinámicamente o mantener una sola instancia
-    private final String dbUrl;
     private final String user;
     private final String pass;
     private final String driver;
 
-    // Constructor privado para evitar instanciación directa
     private DBConfigSingleton() {
-        // Configuraciones para SQLite
-        this.driver = "org.sqlite.JDBC"; // Driver JDBC para SQLite
-        this.dbUrl = System.getProperty("db.url", "jdbc:sqlite:./db/dev.db");
-        this.user = ""; // SQLite no usa usuario
-        this.pass = ""; // SQLite no usa contraseña
+        this.driver = "org.sqlite.JDBC";
+        this.user = "";
+        this.pass = "";
     }
 
     public static synchronized DBConfigSingleton getInstance() {
@@ -29,19 +35,216 @@ public final class DBConfigSingleton {
         return instance;
     }
 
+    /**
+     * Inicializa la base de datos: si las tablas no existen, ejecuta el schema
+     * desde src/main/resources/scheme.sql; si ya existen, ejecuta migraciones.
+     * <p>
+     * Debe llamarse una vez al iniciar la aplicacion, ANTES de cualquier
+     * operacion contra la DB.
+     */
+    public void bootstrap() {
+        try (Connection conn = DriverManager.getConnection(getDbUrl())) {
+            if (tablesExist(conn)) {
+                System.out.println("[DB] Schema ya inicializado, ejecutando migraciones...");
+                runMigrations(conn);
+            } else {
+                System.out.println("[DB] Base de datos vacia, ejecutando scheme.sql...");
+                runSqlScript(conn, loadSchemaSql());
+                System.out.println("[DB] Schema ejecutado correctamente.");
+            }
+
+            // Sembrar datos iniciales (corre siempre, es idempotente por username)
+            Base.open(this.driver, getDbUrl(), this.user, this.pass);
+            try {
+                DataSeeder.seed();
+            } finally {
+                Base.close();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Fallo al inicializar la base de datos: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Migra el schema existente para agregar columnas y actualizar constraints.
+     */
+    private void runMigrations(Connection conn) {
+        try (Statement stmt = conn.createStatement()) {
+            // Migracion 1: columna teacher_id
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN teacher_id INTEGER REFERENCES teachers(id)");
+                System.out.println("[DB] Migracion: columna teacher_id agregada.");
+            } catch (Exception e) {
+                // Ya existe, ignorar
+            }
+
+            // Migracion 2: CHECK constraint con TEACHER
+            try (ResultSet rs = stmt.executeQuery(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'")) {
+                if (rs.next()) {
+                    String createSql = rs.getString("sql");
+                    if (createSql != null && !createSql.contains("TEACHER")) {
+                        System.out.println("[DB] Migracion: actualizando CHECK constraint...");
+                        stmt.execute("ALTER TABLE users RENAME TO users_old");
+                        stmt.execute("CREATE TABLE users (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "name TEXT NOT NULL UNIQUE," +
+                            "password TEXT NOT NULL," +
+                            "role TEXT NOT NULL DEFAULT 'STUDENT' CHECK(role IN('ADMIN','STUDENT','TEACHER'))," +
+                            "student_id INTEGER REFERENCES students(id)," +
+                            "teacher_id INTEGER REFERENCES teachers(id)" +
+                        ")");
+                        stmt.execute("INSERT INTO users (id, name, password, role, student_id, teacher_id) " +
+                            "SELECT id, name, password, role, student_id, teacher_id FROM users_old");
+                        stmt.execute("DROP TABLE users_old");
+                        System.out.println("[DB] Migracion: CHECK constraint actualizado.");
+                    }
+                }
+            }
+            // Migracion 3: tabla study_plans (agregada en schema actualizado)
+            try {
+                stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS study_plans (" +
+                    "id_study_plan INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "name TEXT NOT NULL, " +
+                    "year INTEGER NOT NULL CHECK(year > 0), " +
+                    "id_career INTEGER NOT NULL, " +
+                    "FOREIGN KEY (id_career) REFERENCES careers(id_careers)" +
+                    ")"
+                );
+                System.out.println("[DB] Migracion: tabla study_plans creada.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion study_plans fallo: " + e.getMessage());
+            }
+
+            // Migracion 4: columna code en subjects
+            try {
+                stmt.execute("ALTER TABLE subjects ADD COLUMN code TEXT");
+                System.out.println("[DB] Migracion: columna code agregada a subjects.");
+            } catch (Exception e) {
+                // Ya existe, ignorar
+            }
+
+            // Migracion 5: columna id_study_plan en subjects
+            try {
+                stmt.execute("ALTER TABLE subjects ADD COLUMN id_study_plan INTEGER REFERENCES study_plans(id_study_plan)");
+                System.out.println("[DB] Migracion: columna id_study_plan agregada a subjects.");
+            } catch (Exception e) {
+                // Ya existe, ignorar
+            }
+
+            // Migracion 6: indices en teacher_assignments
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_id ON teacher_assignments(teacher_id)");
+                System.out.println("[DB] Migracion: indice idx_teacher_assignments_teacher_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice teacher_id fallo: " + e.getMessage());
+            }
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_teacher_assignments_subject_id ON teacher_assignments(subject_id)");
+                System.out.println("[DB] Migracion: indice idx_teacher_assignments_subject_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice subject_id fallo: " + e.getMessage());
+            }
+
+            // Migracion 7: CHECK constraint + indices en enrollments
+            try (ResultSet rs = stmt.executeQuery(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='enrollments'")) {
+                if (rs.next()) {
+                    String createSql = rs.getString("sql");
+                    if (createSql != null && !createSql.contains("CANCELLED")) {
+                        System.out.println("[DB] Migracion: actualizando CHECK constraint en enrollments...");
+                        stmt.execute("PRAGMA foreign_keys = OFF");
+                        stmt.execute("ALTER TABLE enrollments RENAME TO enrollments_old");
+                        stmt.execute(
+                            "CREATE TABLE enrollments (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "student_id INTEGER NOT NULL REFERENCES students(id), " +
+                            "subject_id INTEGER NOT NULL REFERENCES subjects(id_subject), " +
+                            "period TEXT NOT NULL, " +
+                            "status TEXT NOT NULL DEFAULT 'ENROLLED' " +
+                            "CHECK(status IN('ENROLLED','DROPPED','COMPLETED','CANCELLED')), " +
+                            "created_at TEXT NOT NULL, " +
+                            "UNIQUE(student_id, subject_id, period)" +
+                            ")"
+                        );
+                        stmt.execute("INSERT INTO enrollments " +
+                            "SELECT id, student_id, subject_id, period, status, created_at " +
+                            "FROM enrollments_old");
+                        stmt.execute("DROP TABLE enrollments_old");
+                        stmt.execute("PRAGMA foreign_keys = ON");
+                        System.out.println("[DB] Migracion: CHECK constraint de enrollments actualizado.");
+                    }
+                }
+            }
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments(student_id)");
+                System.out.println("[DB] Migracion: indice idx_enrollments_student_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice student_id fallo: " + e.getMessage());
+            }
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_enrollments_subject_id ON enrollments(subject_id)");
+                System.out.println("[DB] Migracion: indice idx_enrollments_subject_id creado.");
+            } catch (Exception e) {
+                System.err.println("[DB] Migracion indice subject_id fallo: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            System.err.println("[DB] Migracion fallo (no critico): " + e.getMessage());
+        }
+    }
+
+    /**
+     * Ejecuta un script SQL multilinea (separado por ;).
+     */
+    private void runSqlScript(Connection conn, String sql) throws Exception {
+        for (String statement : sql.split(";")) {
+            String trimmed = statement.trim();
+            if (!trimmed.isEmpty()) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.execute(trimmed);
+                }
+            }
+        }
+    }
+
+    /**
+     * Verifica si al menos la tabla 'users' existe (asumimos schema completo si existe).
+     */
+    private boolean tablesExist(Connection conn) {
+        try (ResultSet rs = conn.getMetaData().getTables(null, null, "users", null)) {
+            return rs.next();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Lee el contenido de scheme.sql desde el classpath.
+     */
+    private String loadSchemaSql() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("scheme.sql");
+        if (is == null) {
+            throw new IllegalStateException(
+                "No se encontro scheme.sql en el classpath. " +
+                "Verifica que exista en src/main/resources/scheme.sql");
+        }
+        return new BufferedReader(new InputStreamReader(is))
+                .lines()
+                .collect(Collectors.joining("\n"));
+    }
+
     // Métodos para abrir y cerrar la conexión
     public void openConnection() {
-        // Utiliza los valores de las propiedades de la clase para abrir la conexión
-        Base.open(this.driver, this.dbUrl, this.user, this.pass);
+        Base.open(this.driver, getDbUrl(), this.user, this.pass);
     }
 
     public void closeConnection() {
         Base.close();
     }
 
-    // Getters existentes
     public String getDbUrl() {
-        return dbUrl;
+        return System.getProperty("db.url", "jdbc:sqlite:./db/dev.db");
     }
 
     public String getUser() {

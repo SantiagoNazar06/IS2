@@ -1,31 +1,27 @@
--- Elimina la tabla 'users' si ya existe para asegurar un inicio limpio
 DROP TABLE IF EXISTS users;
 
--- Crea la tabla 'users' con los campos originales, adaptados para SQLite
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Clave primaria autoincremental para SQLite
-    name TEXT NOT NULL UNIQUE,          -- Nombre de usuario (TEXT es el tipo de cadena recomendado para SQLite), con restricción UNIQUE
-    password TEXT NOT NULL           -- Contraseña hasheada (TEXT es el tipo de cadena recomendado para SQLite)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'ADMIN' CHECK(role IN('ADMIN', 'STUDENT', 'TEACHER')),
+    student_id INTEGER REFERENCES students(id),
+    teacher_id INTEGER REFERENCES teachers(id)
 );
 
--- Elimina la tabla 'persons' si ya existe para asegurar un inicio limpio
 DROP TABLE IF EXISTS persons;
 
--- Crea la tabla 'persons' con los campos originales, adaptados para SQLite
 CREATE TABLE persons (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Clave primaria autoincremental para SQLite
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     dni TEXT NOT NULL UNIQUE,
-    firstName TEXT NOT NULL,          -- Nombre de usuario (TEXT es el tipo de cadena recomendado para SQLite), con restricción UNIQUE
+    firstName TEXT NOT NULL,
     lastName TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT NOT NULL
 );
 
-
--- Elimina la tabla 'teachers' si ya existe para asegurar un inicio limpio
 DROP TABLE IF EXISTS teachers;
 
--- Crea la tabla 'teachers' con los campos originales, adaptados para SQLite
 CREATE TABLE teachers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_persona INTEGER NOT NULL,
@@ -33,11 +29,8 @@ CREATE TABLE teachers (
     FOREIGN KEY (id_persona) REFERENCES persons(id)
 );
 
-
--- Elimina la tabla 'students' si ya existe para asegurar un inicio limpio
 DROP TABLE IF EXISTS students;
 
--- Crea la tabla 'students' con los campos originales, adaptados para SQLite
 CREATE TABLE students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_person INTEGER NOT NULL,
@@ -45,10 +38,27 @@ CREATE TABLE students (
     FOREIGN KEY (id_person) REFERENCES persons(id)
 );
 
+DROP TABLE IF EXISTS subjects;
+
+DROP TABLE IF EXISTS study_plans;
+
+CREATE TABLE study_plans (
+    id_study_plan INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    year INTEGER NOT NULL CHECK(year > 0),
+    id_career INTEGER NOT NULL,
+    FOREIGN KEY (id_career) REFERENCES careers(id_careers)
+);
+
 CREATE TABLE subjects (
     id_subject INTEGER PRIMARY KEY AUTOINCREMENT,
-    subject_name TEXT NOT NULL
+    code TEXT NOT NULL UNIQUE,
+    subject_name TEXT NOT NULL,
+    id_study_plan INTEGER,
+    FOREIGN KEY (id_study_plan) REFERENCES study_plans(id_study_plan)
 );
+
+DROP TABLE IF EXISTS careers;
 
 CREATE TABLE careers (
     id_careers INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,13 +66,62 @@ CREATE TABLE careers (
     career_duration INTEGER NOT NULL CHECK(career_duration > 0)
 );
 
-CREATE TABLE evaluations (
-    id_evaluations INTEGER PRIMARY KEY AUTOINCREMENT,
-    evaluation_date DATE NOT NULL,
-    evaluation_name TEXT NOT NULL
+DROP TABLE IF EXISTS enrollments;
+
+CREATE TABLE enrollments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL REFERENCES students(id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    period TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ENROLLED'
+        CHECK(status IN('ENROLLED', 'DROPPED', 'COMPLETED', 'CANCELLED')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(student_id, subject_id, period)
 );
 
+CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments(student_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_subject_id ON enrollments(subject_id);
+
+DROP TABLE IF EXISTS evaluations;
+
+CREATE TABLE evaluations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    enrollment_id INTEGER NOT NULL UNIQUE REFERENCES enrollments(id),
+    grade DECIMAL(4,2) CHECK(grade IS NULL OR (grade >= 0 AND grade <= 10)),
+    condition_type TEXT NOT NULL CHECK(condition_type IN('REGULAR', 'APROBADA', 'PROMOCION')),
+    evaluation_date DATE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+DROP TABLE IF EXISTS conditions;
+
 CREATE TABLE conditions (
-    id_condition INTEGER PRIMARY KEY AUTOINCREMENT,
-    condition_type TEXT CHECK(condition_type IN('aprobado', 'desaprobado'))
-)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    prerequisite_subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    type VARCHAR(20) NOT NULL DEFAULT 'REGULAR',
+    CHECK(type IN ('REGULAR', 'APROBADA')),
+    CHECK(subject_id != prerequisite_subject_id)
+);
+
+DROP TABLE IF EXISTS teacher_assignments;
+
+CREATE TABLE teacher_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL REFERENCES teachers(id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject),
+    role VARCHAR(30) NOT NULL DEFAULT 'RESPONSABLE' CHECK(role IN('RESPONSABLE', 'JTP', 'AYUDANTE')),
+    period TEXT NOT NULL,
+    UNIQUE(teacher_id, subject_id, period)
+);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_id ON teacher_assignments(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_assignments_subject_id ON teacher_assignments(subject_id);
+
+DROP TABLE IF EXISTS teacher_subject;
+
+CREATE TABLE teacher_subject (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_id INTEGER NOT NULL REFERENCES teachers(id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id_subject)
+);

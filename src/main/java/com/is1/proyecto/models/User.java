@@ -30,4 +30,38 @@ public class User extends Model {
         set("password", password); // Establece el valor para la columna 'password'
     }
 
+    /**
+     * Obtiene el rol del usuario.
+     * 
+     * @return Rol del usuario (ADMIN, STUDENT, TEACHER) o "STUDENT" por defecto
+     */
+    public String getRole() {
+        String role = getString("role");
+        return (role != null && !role.isEmpty()) ? role : "STUDENT";
+    }
+
+    /**
+     * Establece el rol del usuario.
+     * 
+     * @param role Rol del usuario (ADMIN, STUDENT, TEACHER)
+     */
+    public void setRole(String role) {
+        set("role", role);
+    }
+
+    public Long getTeacherId() {
+        return getLong("teacher_id");
+    }
+
+    public void setTeacherId(Long teacherId) {
+        set("teacher_id", teacherId);
+    }
+
+    public Long getStudentId() {
+        return getLong("student_id");
+    }
+
+    public void setStudentId(Long studentId) {
+        set("student_id", studentId);
+    }
 }
